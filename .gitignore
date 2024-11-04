@@ -1,0 +1,86 @@
+# Arquivos e pastas do ambiente virtual
+venv/
+.env/
+*.env
+
+# Arquivos de compilação Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pkl
+*.so
+
+# Logs
+*.log
+
+# Configurações do sistema operacional
+.DS_Store
+Thumbs.db
+
+# Dependências do pacote
+*.egg-info/
+.eggs/
+*.egg
+*.whl
+pip-log.txt
+
+# Arquivos de teste e cobertura de código
+.coverage
+*.cover
+*.py,cover
+.tox/
+.nox/
+.cache/
+coverage.xml
+htmlcov/
+
+# Notebooks
+.ipynb_checkpoints
+
+# IDEs e editores
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Arquivos de configuração de container
+Dockerfile
+docker-compose.yml
+
+# Build
+build/
+dist/
+*.manifest
+*.spec
+
+# PyInstaller
+__pyinstaller/
+
+# mypy
+.mypy_cache/
+
+# Pyright
+.pyright/
+
+# Poetry
+.poetry/
+
+# Arquivos de migração do Django
+*.sqlite3
+*.migrations/
+
+# Arquivos de dados
+*.csv
+*.dat
+*.db
+*.sqlite3
+
+# Arquivos do Jupyter Notebook
+*.ipynb
+
+# Outros
+*.tmp
+*.bak
+*.swp
+*.lock
