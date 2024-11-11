@@ -19,6 +19,28 @@ def gerar_matriz_adjacencia(grafo):
     return matriz_adjacencia
 
 
+def isGrafo(entrada):
+    # Verifica se a entrada é um dicionário
+    if not isinstance(entrada, dict):
+        return False
+    
+    # Itera sobre cada nó e suas conexões
+    for no, conexoes in entrada.items():
+        # Verifica se cada conexão está em uma lista ou conjunto
+        if not isinstance(conexoes, (list, set)):
+            return False
+        
+        # Verifica a simetria das conexões para um grafo não direcionado
+        for conexao in conexoes:
+            # Verifica se o nó atual está na lista de conexões do nó conectado
+            if no not in entrada.get(conexao, []):
+                return False
+    
+    # Se todas as verificações passarem, é um grafo
+    return True
+
+
+
 def gerar_grafo_a_partir_matriz(matriz_adjacencia):
     # Número de vértices no grafo
     n = len(matriz_adjacencia)
@@ -173,7 +195,7 @@ def caminho_dfs(grafo, inicio, destino, caminho=None):
                 return novo_caminho
     return None
 
-# 8) Dado um vértice, retorne, se existir, um ciclo no qual ele se situe (usando DFS)
+# 8) Dado um vértice, retorne, se existir um ciclo no qual ele se situe (usando DFS)
 def encontrar_ciclo(grafo, vertice, visitado=None, caminho=None):
     if visitado is None:
         visitado = set()
@@ -196,6 +218,9 @@ def encontrar_ciclo(grafo, vertice, visitado=None, caminho=None):
 
 # 9) Verificar se G' é subgrafo de G ou vice-versa
 def eh_subgrafo(grafo1, grafo2):
+    # Verifica se G' é grafo
+    if not(isGrafo(grafo2)):
+        return False
     # Verifica se todos os vértices e arestas de grafo1 estão em grafo2
     for vertice in grafo1:
         if vertice not in grafo2:
