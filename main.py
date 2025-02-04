@@ -1,7 +1,13 @@
+from matplotlib import pyplot as plt
 import networkx as nx
 import csv
 
 from grafos.grafos import calcular_distancia_arvores, calcular_graus, caminho_dfs, encontrar_ciclo, existe_aresta_matriz_adjacencia, find_center_tree, generate_spanning_trees, gerar_lista_adjacencia, gerar_matriz_adjacencia, gerar_matriz_incidencia, grau_vertice_matriz_adjacencia, numero_vertices, subgrafo_ou_vice_versa, verificar_subgrafo, vertices_adjacentes
+
+def visualizar_grafo(G):
+    plt.figure(figsize=(8, 6))
+    nx.draw(G, with_labels=True, node_color='lightblue', edge_color='gray', node_size=2000, font_size=10)
+    plt.show()
 
 # Funções para carregar grafos
 def carregar_grafo():
@@ -81,6 +87,7 @@ def gerar_comando_com_funcao(grafos):
         print("14 - Gerar árvores geradoras de um grafo")
         print("15 - Calcular distância entre duas árvores de abrangência")
         print("16 - Determinar árvore central")
+        print("17 - Visualizar o grafo")
         print("0 - Sair")
         
         opcao = input("Opção: ")
@@ -90,7 +97,7 @@ def gerar_comando_com_funcao(grafos):
             print("\nGrafos carregados:")
             for i, G in enumerate(grafos):
                 print(f"Grafo {i+1}: {list(G.nodes)}")
-        elif opcao in ["1", "2", "3", "4", "5", "6", "8", "9", "10", "11", "12", "13", "14", "15", "16"]:  # Adicionar as novas opções ao menu
+        elif opcao in ["1", "2", "3", "4", "5", "6", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17"]:
             if len(grafos) > 1:
                 print("\nEscolha qual grafo utilizar:")
                 for i, G in enumerate(grafos):
@@ -216,6 +223,16 @@ def gerar_comando_com_funcao(grafos):
                 print("Árvore geradora central:")
                 for node, neighbors in central_tree.items():
                     print(f"{node}: {', '.join(map(str, neighbors))}")
+            elif opcao == "17":  # Visualizar o grafo
+                if len(grafos) > 1:
+                    print("\nEscolha qual grafo visualizar:")
+                    for i, G in enumerate(grafos):
+                        print(f"{i+1} - Grafo {i+1}")
+                    escolha = int(input("Escolha um grafo: ")) - 1
+                    G = grafos[escolha]
+                else:
+                    G = grafos[0]
+                visualizar_grafo(G)
         else:
             print("Opção inválida.")
 
