@@ -1,3 +1,5 @@
+
+
 def gerar_matriz_adjacencia(grafo):
     # Extrai os vértices do grafo
     vertices = list(grafo.keys())
@@ -19,6 +21,8 @@ def gerar_matriz_adjacencia(grafo):
     return matriz_adjacencia
 
 
+
+
 def gerar_grafo_a_partir_matriz(matriz_adjacencia):
     # Número de vértices no grafo
     n = len(matriz_adjacencia)
@@ -33,6 +37,8 @@ def gerar_grafo_a_partir_matriz(matriz_adjacencia):
                 grafo[i].append(j)
     
     return grafo
+
+
 
 
 def gerar_matriz_incidencia(grafo):
@@ -128,6 +134,7 @@ def numero_arestas_matriz_incidencia(matriz_incidencia):
 def vertices_adjacentes(grafo, vertice):
     return grafo.get(vertice, [])
 
+
 # 4) Dados dois vértices, retorne se existe uma aresta que os une
 def existe_aresta_lista_adjacencia(grafo, v1, v2):
     return v2 in grafo.get(v1, [])
@@ -173,7 +180,7 @@ def caminho_dfs(grafo, inicio, destino, caminho=None):
                 return novo_caminho
     return None
 
-# 8) Dado um vértice, retorne, se existir, um ciclo no qual ele se situe (usando DFS)
+# 8) Dado um vértice, retorne, se existir, um ciclo no qual ele se situe
 def encontrar_ciclo(grafo, vertice, visitado=None, caminho=None):
     if visitado is None:
         visitado = set()
@@ -212,3 +219,19 @@ def subgrafo_ou_vice_versa(grafo1, grafo2):
         return "Grafo2 é subgrafo de Grafo1"
     else:
         return "Nenhum é subgrafo do outro"
+
+
+def calcular_graus(grafo):
+    graus = {no: len(vizinhos) for no, vizinhos in grafo.items()}
+    maior_grau = max(graus.values())
+    menor_grau = min(graus.values())
+    return maior_grau, menor_grau
+
+def verificar_subgrafo(grafo, subgrafo):
+    for no, vizinhos in subgrafo.items():
+        if no not in grafo:
+            return False
+        for vizinho in vizinhos:
+            if vizinho not in grafo[no]:
+                return False
+    return True

@@ -1,4 +1,4 @@
-from grafos.grafos import caminho_dfs, eh_subgrafo, encontrar_ciclo, existe_aresta_lista_adjacencia, gerar_grafo_a_partir_lista, gerar_grafo_a_partir_matriz, gerar_grafo_a_partir_matriz_incidencia, gerar_lista_adjacencia, gerar_matriz_adjacencia, gerar_matriz_incidencia, grau_vertice_lista_adjacencia, graus_grafo_lista_adjacencia, numero_arestas_lista_adjacencia, numero_vertices, vertices_adjacentes
+from grafos.grafos import calcular_graus, caminho_dfs, eh_subgrafo, encontrar_ciclo, existe_aresta_lista_adjacencia, gerar_grafo_a_partir_lista, gerar_grafo_a_partir_matriz, gerar_grafo_a_partir_matriz_incidencia, gerar_lista_adjacencia, gerar_matriz_adjacencia, gerar_matriz_incidencia, grau_vertice_lista_adjacencia, graus_grafo_lista_adjacencia, numero_arestas_lista_adjacencia, numero_vertices, vertices_adjacentes
 
 # EX 1
 
@@ -151,3 +151,9 @@ print("subgrafo é subgrafo de grafo?:", eh_subgrafo(subgrafo, grafo))
 # Verificar se 'grafo' é subgrafo de 'subgrafo'
 print("grafo é subgrafo de subgrafo?:", eh_subgrafo(grafo, subgrafo))
 
+grafo_companhia_aerea = { "GRU": ["JFK", "CDG", "LHR"], "JFK": ["GRU", "LAX", "ORD"], "CDG": ["GRU", "FCO", "AMS"], "LHR": ["GRU", "DXB", "SIN"], "LAX": ["JFK", "SFO", "SEA"], "ORD": ["JFK", "DFW", "ATL"], "FCO": ["CDG", "MAD", "MUC"], "AMS": ["CDG", "BRU", "CPH"], "DXB": ["LHR", "DEL", "JNB"], "SIN": ["LHR", "HKG", "SYD"], "SFO": ["LAX", "SEA", "PHX"], "SEA": ["LAX", "SFO", "PDX"], "DFW": ["ORD", "IAH", "MIA"], "ATL": ["ORD", "MCO", "CLT"], "MAD": ["FCO", "LIS", "BCN"], "MUC": ["FCO", "ZRH", "VIE"], "BRU": ["AMS", "LIS", "BCN"], "CPH": ["AMS", "OSL", "ARN"], "DEL": ["DXB", "BOM", "MAA"], "JNB": ["DXB", "CPT", "DUR"], "HKG": ["SIN", "PEK", "NRT"], "SYD": ["SIN", "MEL", "BNE"], "PHX": ["SFO", "LAS", "DEN"], "PDX": ["SEA", "SLC", "LAS"], "IAH": ["DFW", "MIA", "MSY"], "MIA": ["DFW", "IAH", "ORD"], "MCO": ["ATL", "TPA", "JAX"], "CLT": ["ATL", "DCA", "RDU"], "LIS": ["MAD", "LHR", "BCN"], "BCN": ["LIS", "MAD", "MUC"], "ZRH": ["MUC", "VIE", "BRU"], "VIE": ["MUC", "ZRH", "FCO"], "OSL": ["CPH", "ARN", "HEL"], "ARN": ["CPH", "OSL", "HEL"], "BOM": ["DEL", "BLR", "HYD"], "MAA": ["DEL", "BOM", "BLR"], "CPT": ["JNB", "DUR", "PLZ"], "DUR": ["JNB", "CPT", "PLZ"], "PEK": ["HKG", "ICN", "PVG"], "NRT": ["HKG", "ICN", "KIX"] }
+
+
+maior, menor = calcular_graus(grafo_companhia_aerea)
+print(maior)
+print(menor)
