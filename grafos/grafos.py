@@ -1,4 +1,6 @@
 
+from collections import defaultdict, deque
+import random
 
 def gerar_matriz_adjacencia(grafo):
     # Extrai os vértices do grafo
@@ -21,8 +23,6 @@ def gerar_matriz_adjacencia(grafo):
     return matriz_adjacencia
 
 
-
-
 def gerar_grafo_a_partir_matriz(matriz_adjacencia):
     # Número de vértices no grafo
     n = len(matriz_adjacencia)
@@ -37,8 +37,6 @@ def gerar_grafo_a_partir_matriz(matriz_adjacencia):
                 grafo[i].append(j)
     
     return grafo
-
-
 
 
 def gerar_matriz_incidencia(grafo):
@@ -235,3 +233,149 @@ def verificar_subgrafo(grafo, subgrafo):
             if vizinho not in grafo[no]:
                 return False
     return True
+
+def prim_mst(graph, vertices):
+    """Gera uma árvore de abrangência mínima (MST) usando o algoritmo de Prim sem considerar pesos."""
+    mst = []
+    visited = set([vertices[0]])
+    edges = [(u, v) for u, adj in graph.items() for v in adj if u in visited and v not in visited]
+    
+    while len(visited) < len(vertices):
+        edges.sort(key=lambda x: (x[0], x[1]))  # Ordena as arestas (sem peso)
+        for u, v in edges:
+            if v not in visited:
+                mst.append((u, v))
+                visited.add(v)
+                edges.extend([(v, w) for w in graph[v] if w not in visited])
+                break
+    
+    return mst
+
+def get_fundamental_cycle(tree, new_edge):
+    """Encontra o ciclo fundamental formado ao adicionar uma aresta a uma árvore."""
+    u, v = new_edge
+    parent = {u: None}
+    stack = [u]
+    
+    while stack:
+        node = stack.pop()
+        for adj in tree.get(node, {}):
+            if adj not in parent:
+                parent[adj] = node
+                stack.append(adj)
+                if adj == v:
+                    break
+    
+    if v not in parent:
+        return []  # Retorna um ciclo vazio se não encontrar um caminho válido
+    
+    cycle = []
+    while v is not None:
+        cycle.append((parent[v], v))
+        v = parent[v]
+    
+    return cycle[1:]
+
+def generate_spanning_trees(graph, vertices, k):
+    """Gera uma árvore de abrangência e encontra k outras árvores por trocas cíclicas."""
+    tree_edges = prim_mst(graph, vertices)
+    tree = {u: set() for u in vertices}
+    for u, v in tree_edges:
+        tree[u].add(v)
+        tree[v].add(u)
+    
+    trees = [tree.copy()]
+    all_edges = [(u, v) for u in graph for v in graph[u] if u < v]
+    
+    for _ in range(k):
+        non_tree_edges = [e for e in all_edges if e[:2] not in [(x, y) for x in tree for y in tree[x]]]
+        if not non_tree_edges:
+            break
+        
+        new_edge = random.choice(non_tree_edges)
+        cycle = get_fundamental_cycle(tree, new_edge)
+        
+        removable_edges = [e for e in cycle if e != new_edge]
+        if removable_edges:
+            remove_edge = random.choice(removable_edges)
+            if remove_edge[0] in tree and remove_edge[1] in tree[remove_edge[0]]:
+                tree[remove_edge[0]].remove(remove_edge[1])
+            if remove_edge[1] in tree and remove_edge[0] in tree[remove_edge[1]]:
+                tree[remove_edge[1]].remove(remove_edge[0])
+            
+            tree[new_edge[0]].add(new_edge[1])
+            tree[new_edge[1]].add(new_edge[0])
+            trees.append(tree.copy())
+    
+    return trees
+
+
+def calcular_distancia_arvores(A1, A2):
+    # Inicializa o contador de distância
+    distancia = 0
+    
+    # Verifica arestas em A1 que não estão em A2
+    for aresta in A1:
+        # Considera arestas não direcionadas, ou seja, (u, v) é igual a (v, u)
+        if aresta not in A2 and (aresta[1], aresta[0]) not in A2:
+            distancia += 1
+    
+    # Verifica arestas em A2 que não estão em A1
+    for aresta in A2:
+        # Considera arestas não direcionadas, ou seja, (u, v) é igual a (v, u)
+        if aresta not in A1 and (aresta[1], aresta[0]) not in A1:
+            distancia += 1
+    
+    return distancia
+
+
+def bfs(graph, start):
+    distances = {node: float('inf') for node in graph}
+    distances[start] = 0
+    queue = deque([start])
+    
+    while queue:
+        node = queue.popleft()
+        
+        for neighbor in graph[node]:
+            if distances[neighbor] == float('inf'):  # Se o nó não foi visitado
+                distances[neighbor] = distances[node] + 1
+                queue.append(neighbor)
+    
+    return distances
+
+# Função para encontrar o nó central
+def find_center(graph):
+    # Calcula as distâncias de cada nó
+    max_distances = {}
+    for node in graph:
+        distances = bfs(graph, node)
+        max_distances[node] = max(distances.values())  # Maior distância até qualquer outro nó
+    
+    # O nó central será aquele com a menor maior distância
+    center = min(max_distances, key=max_distances.get)
+    
+    return center
+
+# Função para construir a árvore geradora central a partir do nó central
+def build_central_tree(graph, center):
+    distances = bfs(graph, center)
+    tree = defaultdict(list)
+    
+    # Para reconstruir a árvore, rastreia os pais a partir das distâncias
+    for node in graph:
+        if node != center:
+            for neighbor in graph[node]:
+                if distances[neighbor] == distances[node] - 1:
+                    tree[node].append(neighbor)
+                    tree[neighbor].append(node)
+    
+    return tree
+
+def find_center_tree(graph):
+    # Encontrar o nó central
+    center = find_center(graph)
+
+    # Construir a árvore geradora central a partir do nó central
+    central_tree = build_central_tree(graph, center)
+    return center, central_tree
