@@ -379,3 +379,46 @@ def find_center_tree(graph):
     # Construir a árvore geradora central a partir do nó central
     central_tree = build_central_tree(graph, center)
     return center, central_tree
+
+# Função para verificar se o grafo é conexo
+def is_connected(graph, n):
+    visited = [False] * n
+    
+    def dfs(v):
+        visited[v] = True
+        for neighbor in graph[v]:
+            if not visited[neighbor]:
+                dfs(neighbor)
+    
+    # Iniciar DFS a partir do primeiro vértice (supondo que o grafo tenha pelo menos um vértice)
+    dfs(0)
+    
+    return all(visited)
+
+# Função para verificar o grau de cada vértice
+def check_degrees(graph, n):
+    odd_degree_vertices = 0
+    for i in range(n):
+        if len(graph[i]) % 2 != 0:
+            odd_degree_vertices += 1
+    return odd_degree_vertices
+
+# Função para verificar se o grafo tem caminho ou circuito euleriano
+def eulerian_path_or_cycle(G):
+    # Obter a lista de adjacência do grafo
+    graph = {k: list(v) for k, v in G.adjacency()}  # Converte o formato para lista de adjacência
+    
+    # Número de vértices
+    n = len(G.nodes)
+    
+    if not is_connected(graph, n):
+        return "Não é conexo, não há caminho ou circuito euleriano."
+    
+    odd_degree_count = check_degrees(graph, n)
+    
+    if odd_degree_count == 0:
+        return "O grafo possui um circuito euleriano."
+    elif odd_degree_count == 2:
+        return "O grafo possui um caminho euleriano."
+    else:
+        return "O grafo não possui caminho ou circuito euleriano."
