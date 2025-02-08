@@ -1,3 +1,8 @@
+import networkx as nx
+import matplotlib.pyplot as plt
+import random
+
+
 def gerar_matriz_adjacencia(grafo):
     # Extrai os vértices do grafo
     vertices = list(grafo.keys())
@@ -195,6 +200,38 @@ def caminho_dfs(grafo, inicio, destino, caminho=None):
                 return novo_caminho
     return None
 
+def caminho_bfs(grafo, inicio, destino):
+    # Lista para rastrear caminhos, cada elemento é uma lista representando um caminho parcial
+    fila = [[inicio]]
+    
+    # Conjunto para rastrear os nós visitados
+    visitados = set()
+    
+    while fila:
+        # Retira o primeiro caminho da lista
+        caminho = fila.pop(0)
+        
+        # Obtém o último nó do caminho atual
+        no_atual = caminho[-1]
+        
+        # Verifica se o nó destino foi alcançado
+        if no_atual == destino:
+            return caminho
+        
+        # Verifica os vizinhos do nó atual
+        for vizinho in grafo.get(no_atual, []):
+            if vizinho not in visitados:
+                # Marca o vizinho como visitado
+                visitados.add(vizinho)
+                
+                # Cria um novo caminho e adiciona à fila
+                novo_caminho = caminho + [vizinho]
+                fila.append(novo_caminho)
+    
+    # Retorna None se não houver caminho entre inicio e destino
+    return None
+
+
 # 8) Dado um vértice, retorne, se existir um ciclo no qual ele se situe (usando DFS)
 def encontrar_ciclo(grafo, vertice, visitado=None, caminho=None):
     if visitado is None:
@@ -237,3 +274,367 @@ def subgrafo_ou_vice_versa(grafo1, grafo2):
         return "Grafo2 é subgrafo de Grafo1"
     else:
         return "Nenhum é subgrafo do outro"
+
+def busca_destinos(grafo, inicio, destinos):
+    # Realiza uma cópia dos destinos para não modificar a lista original
+    destinos_restantes = set(destinos)
+    caminho = []
+    
+    def procura(v):
+        # Adiciona o vértice atual ao caminho e remove-o dos destinos restantes se for um destino
+        caminho.append(v)
+        if v in destinos_restantes:
+            destinos_restantes.remove(v)
+        
+        # Para a busca se todos os destinos foram encontrados
+        if not destinos_restantes:
+            return True
+        
+        # Continua a busca para os vizinhos
+        for vizinho in grafo.get(v, []):
+            if vizinho not in caminho:
+                if procura(vizinho):
+                    return True
+        return False
+    
+    # Inicia a DFS a partir do vértice inicial
+    procura(inicio)
+    
+    # Verifica se ainda há destinos não encontrados
+    if destinos_restantes:
+        print("Destinos não alcançados:", destinos_restantes)
+    
+    return caminho if not destinos_restantes else caminho, destinos_restantes
+
+def prim_mst(graph, vertices):
+    """Gera uma árvore de abrangência mínima (MST) usando o algoritmo de Prim sem considerar pesos."""
+    mst = []
+    visited = set([vertices[0]])
+    edges = [(u, v) for u, adj in graph.items() for v in adj if u in visited and v not in visited]
+    
+    while len(visited) < len(vertices):
+        edges.sort(key=lambda x: (x[0], x[1]))  # Ordena as arestas (sem peso)
+        for u, v in edges:
+            if v not in visited:
+                mst.append((u, v))
+                visited.add(v)
+                edges.extend([(v, w) for w in graph[v] if w not in visited])
+                break
+    
+    return mst
+
+def get_fundamental_cycle(tree, new_edge):
+    """Encontra o ciclo fundamental formado ao adicionar uma aresta a uma árvore."""
+    u, v = new_edge
+    parent = {u: None}
+    stack = [u]
+    
+    while stack:
+        node = stack.pop()
+        for adj in tree.get(node, {}):
+            if adj not in parent:
+                parent[adj] = node
+                stack.append(adj)
+                if adj == v:
+                    break
+    
+    if v not in parent:
+        return []  # Retorna um ciclo vazio se não encontrar um caminho válido
+    
+    cycle = []
+    while v is not None:
+        cycle.append((parent[v], v))
+        v = parent[v]
+    
+    return cycle[1:]
+
+def generate_spanning_trees(graph, vertices, k):
+    """Gera uma árvore de abrangência e encontra k outras árvores por trocas cíclicas."""
+    tree_edges = prim_mst(graph, vertices)
+    tree = {u: set() for u in vertices}
+    for u, v in tree_edges:
+        tree[u].add(v)
+        tree[v].add(u)
+    
+    trees = [tree.copy()]
+    all_edges = [(u, v) for u in graph for v in graph[u] if u < v]
+    
+    for _ in range(k):
+        non_tree_edges = [e for e in all_edges if e[:2] not in [(x, y) for x in tree for y in tree[x]]]
+        if not non_tree_edges:
+            break
+        
+        new_edge = random.choice(non_tree_edges)
+        cycle = get_fundamental_cycle(tree, new_edge)
+        
+        removable_edges = [e for e in cycle if e != new_edge]
+        if removable_edges:
+            remove_edge = random.choice(removable_edges)
+            if remove_edge[0] in tree and remove_edge[1] in tree[remove_edge[0]]:
+                tree[remove_edge[0]].remove(remove_edge[1])
+            if remove_edge[1] in tree and remove_edge[0] in tree[remove_edge[1]]:
+                tree[remove_edge[1]].remove(remove_edge[0])
+            
+            tree[new_edge[0]].add(new_edge[1])
+            tree[new_edge[1]].add(new_edge[0])
+            trees.append(tree.copy())
+    
+    return trees
+
+
+def calcular_distancia_arvores(A1, A2):
+    # Inicializa o contador de distância
+    distancia = 0
+    
+    # Verifica arestas em A1 que não estão em A2
+    for aresta in A1:
+        # Considera arestas não direcionadas, ou seja, (u, v) é igual a (v, u)
+        if aresta not in A2 and (aresta[1], aresta[0]) not in A2:
+            distancia += 1
+    
+    # Verifica arestas em A2 que não estão em A1
+    for aresta in A2:
+        # Considera arestas não direcionadas, ou seja, (u, v) é igual a (v, u)
+        if aresta not in A1 and (aresta[1], aresta[0]) not in A1:
+            distancia += 1
+    
+    return distancia
+
+
+def bfs(graph, start):
+    distances = {node: float('inf') for node in graph}
+    distances[start] = 0
+    queue = deque([start])
+    
+    while queue:
+        node = queue.popleft()
+        
+        for neighbor in graph[node]:
+            if distances[neighbor] == float('inf'):  # Se o nó não foi visitado
+                distances[neighbor] = distances[node] + 1
+                queue.append(neighbor)
+    
+    return distances
+
+# Função para encontrar o nó central
+def find_center(graph):
+    # Calcula as distâncias de cada nó
+    max_distances = {}
+    for node in graph:
+        distances = bfs(graph, node)
+        max_distances[node] = max(distances.values())  # Maior distância até qualquer outro nó
+    
+    # O nó central será aquele com a menor maior distância
+    center = min(max_distances, key=max_distances.get)
+    
+    return center
+
+# Função para construir a árvore geradora central a partir do nó central
+def build_central_tree(graph, center):
+    distances = bfs(graph, center)
+    tree = defaultdict(list)
+    
+    # Para reconstruir a árvore, rastreia os pais a partir das distâncias
+    for node in graph:
+        if node != center:
+            for neighbor in graph[node]:
+                if distances[neighbor] == distances[node] - 1:
+                    tree[node].append(neighbor)
+                    tree[neighbor].append(node)
+    
+    return tree
+
+def find_center_tree(graph):
+    # Encontrar o nó central
+    center = find_center(graph)
+
+    # Construir a árvore geradora central a partir do nó central
+    central_tree = build_central_tree(graph, center)
+    return center, central_tree
+
+# Função para verificar se o grafo é conexo
+def is_connected(graph, n):
+    visited = [False] * n
+    
+    def dfs(v):
+        visited[v] = True
+        for neighbor in graph[v]:
+            if not visited[neighbor]:
+                dfs(neighbor)
+    
+    # Iniciar DFS a partir do primeiro vértice (supondo que o grafo tenha pelo menos um vértice)
+    dfs(0)
+    
+    return all(visited)
+
+# Função para verificar o grau de cada vértice
+def check_degrees(graph, n):
+    odd_degree_vertices = 0
+    for i in range(n):
+        if len(graph[i]) % 2 != 0:
+            odd_degree_vertices += 1
+    return odd_degree_vertices
+
+# Função para verificar se o grafo tem caminho ou circuito euleriano
+def eulerian_path_or_cycle(G):
+    # Obter a lista de adjacência do grafo
+    graph = {k: list(v) for k, v in G.adjacency()}  # Converte o formato para lista de adjacência
+    
+    # Número de vértices
+    n = len(G.nodes)
+    
+    if not is_connected(graph, n):
+        return "Não é conexo, não há caminho ou circuito euleriano."
+    
+    odd_degree_count = check_degrees(graph, n)
+    
+    if odd_degree_count == 0:
+        return "O grafo possui um circuito euleriano."
+    elif odd_degree_count == 2:
+        return "O grafo possui um caminho euleriano."
+    else:
+        return "O grafo não possui caminho ou circuito euleriano."
+
+#----------------------- Plot grafos
+def plotar_subgrafo(grafo, n):
+    # Verifica se o número de nós no grafo é menor que 'n'
+    total_nos = len(grafo.nodes)
+    if total_nos <= n:
+        # Se o grafo já tem 'n' nós ou menos, plote o grafo completo
+        subgrafo = grafo
+    else:
+        # Seleciona um nó inicial aleatório
+        no_inicial = random.choice(list(grafo.nodes))
+        
+        # Usa uma busca em largura para obter até 'n' nós conectados a partir do nó inicial
+        sub_nos = set([no_inicial])
+        for vizinho in nx.bfs_edges(grafo, no_inicial):
+            sub_nos.update(vizinho)
+            if len(sub_nos) >= n:
+                break
+        
+        # Cria o subgrafo a partir dos nós selecionados
+        subgrafo = grafo.subgraph(sub_nos)
+    
+    # Plota o subgrafo
+    plt.figure(figsize=(8, 6))
+    nx.draw(subgrafo, with_labels=True, node_size=500, font_size=10, font_color="black")
+    plt.title(f"Subgrafo com até {n} nós")
+    plt.show()
+
+def grafo_para_lista_adjacencia(G):
+    # Inicializa o dicionário para armazenar a lista de adjacência
+    lista_adjacencia = {}
+    
+    # Itera sobre cada nó no grafo
+    for vertice in G.nodes():
+        # Obtém os vizinhos (vértices adjacentes) de cada vértice
+        adjacentes = list(G.neighbors(vertice))
+        
+        # Adiciona o vértice e sua lista de adjacentes ao dicionário
+        lista_adjacencia[vertice] = adjacentes
+    
+    return lista_adjacencia
+
+def plotar_nos_maior_grau(G):
+    # Calcula o grau de cada nó e encontra o grau máximo
+    graus = dict(G.degree())
+    grau_maximo = max(graus.values())
+    
+    # Filtra os nós que têm o grau máximo
+    nos_maior_grau = [n for n, grau in graus.items() if grau == grau_maximo]
+    
+    # Destaca o grafo e os nós com o maior grau
+    plt.figure(figsize=(12, 12))
+    pos = nx.spring_layout(G, k=0.6, iterations=50)  # Ajuste k para controlar o espaçamento
+    
+    # Desenha o grafo
+    nx.draw(G, pos, with_labels=True, node_color='lightblue', node_size=500, edge_color='gray')
+    
+    # Destaca os nós com o maior grau
+    nx.draw_networkx_nodes(G, pos, nodelist=nos_maior_grau, node_color='orange', node_size=700)
+    
+    plt.title(f"Nó(s) com Maior Grau ({grau_maximo})")
+    plt.show()
+
+# Função para encontrar e plotar o(s) nó(s) com menor grau
+def plotar_nos_menor_grau(G):
+    # Calcula o grau de cada nó e encontra o grau mínimo
+    graus = dict(G.degree())
+    grau_minimo = min(graus.values())
+    
+    # Filtra os nós que têm o grau mínimo
+    nos_menor_grau = [n for n, grau in graus.items() if grau == grau_minimo]
+    
+    # Destaca o grafo e os nós com o menor grau
+    plt.figure(figsize=(12, 12))
+    pos = nx.spring_layout(G, k=0.6, iterations=50)  # Ajuste k para controlar o espaçamento
+    
+    # Desenha o grafo
+    nx.draw(G, pos, with_labels=True, node_color='lightblue', node_size=500, edge_color='gray')
+    
+    # Destaca os nós com o menor grau
+    nx.draw_networkx_nodes(G, pos, nodelist=nos_menor_grau, node_color='red', node_size=700)
+    
+    plt.title(f"Nó(s) com Menor Grau ({grau_minimo})")
+    plt.show()
+
+def plot_nx_grafo(G):
+    # Visualiza o grafo
+    pos = nx.spring_layout(G, k=0.6, iterations=80)  # Ajuste k para controlar o espaçamento
+
+    # Plotando o grafo
+    plt.figure(figsize=(12, 12))  # Aumenta o tamanho da figura
+    nx.draw(G, pos, with_labels=True, node_size=500, font_size=10, font_weight='bold', node_color="skyblue", edge_color="gray")
+    plt.title("Grafo com Nós Mais Espaçados")
+    plt.show()
+    return
+
+def plotar_no_com_vizinhos(grafo, no):
+    # Cria um grafo vazio para o subgrafo
+    subgrafo = nx.Graph()
+    
+    # Adiciona o nó selecionado e seus vizinhos
+    subgrafo.add_node(no)  # Adiciona o nó selecionado
+    for vizinho in grafo[no]:  # Adiciona cada vizinho e a aresta entre eles
+        subgrafo.add_edge(no, vizinho)
+    
+    # Desenha o subgrafo com o nó e seus vizinhos
+    plt.figure(figsize=(5, 5))
+    nx.draw(subgrafo, with_labels=True, node_size=500, font_size=12, font_color="black", node_color="skyblue")
+    plt.show()
+
+def plotar_grafo_com_graus(grafo):
+    # Calcula os graus de cada nó
+    graus = dict(grafo.degree())
+    
+    # Define a posição dos nós no gráfico
+    pos = nx.spring_layout(grafo, k=0.7, iterations=50)  # Ajuste k para controlar o espaçamento
+    
+    # Desenha o grafo
+    plt.figure(figsize=(8, 8))
+    nx.draw(grafo, pos, with_labels=True, node_size=500, font_size=12, font_color="skyblue", node_color="skyblue")
+    
+    # Adiciona o grau ao lado de cada nó
+    labels = {no: f"{no} ({grau})" for no, grau in graus.items()}
+    nx.draw_networkx_labels(grafo, pos, labels=labels, font_size=10, font_color="black")
+    
+    plt.show()
+
+def plotar_subgrafo_lista(grafo, vertices):
+        # Cria um subgrafo contendo apenas os vértices e as arestas entre eles
+    subgrafo = grafo.subgraph(vertices)
+    
+    # Configura o plot do subgrafo
+    plt.figure(figsize=(12, 12))
+
+    # Define a posição dos nós no gráfico
+    pos = nx.spring_layout(grafo, k=0.7, iterations=80)  # Ajuste k para controlar o espaçamento
+    
+    # Desenha o subgrafo
+    nx.draw(subgrafo, pos, with_labels=True, node_size=500, font_size=10, font_color="black", node_color="skyblue")
+    nx.draw_networkx_edges(subgrafo, pos, width=1.5)
+    
+    # Exibe o plot
+    plt.title("Subgrafo com vértices selecionados")
+    plt.show()
