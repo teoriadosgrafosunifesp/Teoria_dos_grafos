@@ -1,8 +1,15 @@
+<<<<<<< HEAD
 import networkx as nx
 import matplotlib.pyplot as plt
 import random
 
 
+=======
+
+from collections import defaultdict, deque
+import random
+
+>>>>>>> cd6c96b41a855d25574319de10d716eb2b84c918
 def gerar_matriz_adjacencia(grafo):
     # Extrai os vértices do grafo
     vertices = list(grafo.keys())
@@ -155,6 +162,7 @@ def numero_arestas_matriz_incidencia(matriz_incidencia):
 def vertices_adjacentes(grafo, vertice):
     return grafo.get(vertice, [])
 
+
 # 4) Dados dois vértices, retorne se existe uma aresta que os une
 def existe_aresta_lista_adjacencia(grafo, v1, v2):
     return v2 in grafo.get(v1, [])
@@ -200,6 +208,7 @@ def caminho_dfs(grafo, inicio, destino, caminho=None):
                 return novo_caminho
     return None
 
+<<<<<<< HEAD
 def caminho_bfs(grafo, inicio, destino):
     # Lista para rastrear caminhos, cada elemento é uma lista representando um caminho parcial
     fila = [[inicio]]
@@ -233,6 +242,9 @@ def caminho_bfs(grafo, inicio, destino):
 
 
 # 8) Dado um vértice, retorne, se existir um ciclo no qual ele se situe (usando DFS)
+=======
+# 8) Dado um vértice, retorne, se existir, um ciclo no qual ele se situe
+>>>>>>> cd6c96b41a855d25574319de10d716eb2b84c918
 def encontrar_ciclo(grafo, vertice, visitado=None, caminho=None):
     if visitado is None:
         visitado = set()
@@ -275,6 +287,7 @@ def subgrafo_ou_vice_versa(grafo1, grafo2):
     else:
         return "Nenhum é subgrafo do outro"
 
+<<<<<<< HEAD
 def busca_destinos(grafo, inicio, destinos):
     # Realiza uma cópia dos destinos para não modificar a lista original
     destinos_restantes = set(destinos)
@@ -305,6 +318,23 @@ def busca_destinos(grafo, inicio, destinos):
         print("Destinos não alcançados:", destinos_restantes)
     
     return caminho if not destinos_restantes else caminho, destinos_restantes
+=======
+
+def calcular_graus(grafo):
+    graus = {no: len(vizinhos) for no, vizinhos in grafo.items()}
+    maior_grau = max(graus.values())
+    menor_grau = min(graus.values())
+    return maior_grau, menor_grau
+
+def verificar_subgrafo(grafo, subgrafo):
+    for no, vizinhos in subgrafo.items():
+        if no not in grafo:
+            return False
+        for vizinho in vizinhos:
+            if vizinho not in grafo[no]:
+                return False
+    return True
+>>>>>>> cd6c96b41a855d25574319de10d716eb2b84c918
 
 def prim_mst(graph, vertices):
     """Gera uma árvore de abrangência mínima (MST) usando o algoritmo de Prim sem considerar pesos."""
@@ -494,6 +524,7 @@ def eulerian_path_or_cycle(G):
         return "O grafo possui um caminho euleriano."
     else:
         return "O grafo não possui caminho ou circuito euleriano."
+<<<<<<< HEAD
 
 #----------------------- Plot grafos
 def plotar_subgrafo(grafo, n):
@@ -638,3 +669,5 @@ def plotar_subgrafo_lista(grafo, vertices):
     # Exibe o plot
     plt.title("Subgrafo com vértices selecionados")
     plt.show()
+=======
+>>>>>>> cd6c96b41a855d25574319de10d716eb2b84c918
