@@ -1,15 +1,10 @@
-<<<<<<< HEAD
+
 import networkx as nx
 import matplotlib.pyplot as plt
 import random
-
-
-=======
-
 from collections import defaultdict, deque
-import random
+import itertools
 
->>>>>>> cd6c96b41a855d25574319de10d716eb2b84c918
 def gerar_matriz_adjacencia(grafo):
     # Extrai os vértices do grafo
     vertices = list(grafo.keys())
@@ -208,7 +203,6 @@ def caminho_dfs(grafo, inicio, destino, caminho=None):
                 return novo_caminho
     return None
 
-<<<<<<< HEAD
 def caminho_bfs(grafo, inicio, destino):
     # Lista para rastrear caminhos, cada elemento é uma lista representando um caminho parcial
     fila = [[inicio]]
@@ -242,9 +236,7 @@ def caminho_bfs(grafo, inicio, destino):
 
 
 # 8) Dado um vértice, retorne, se existir um ciclo no qual ele se situe (usando DFS)
-=======
 # 8) Dado um vértice, retorne, se existir, um ciclo no qual ele se situe
->>>>>>> cd6c96b41a855d25574319de10d716eb2b84c918
 def encontrar_ciclo(grafo, vertice, visitado=None, caminho=None):
     if visitado is None:
         visitado = set()
@@ -287,7 +279,6 @@ def subgrafo_ou_vice_versa(grafo1, grafo2):
     else:
         return "Nenhum é subgrafo do outro"
 
-<<<<<<< HEAD
 def busca_destinos(grafo, inicio, destinos):
     # Realiza uma cópia dos destinos para não modificar a lista original
     destinos_restantes = set(destinos)
@@ -318,7 +309,6 @@ def busca_destinos(grafo, inicio, destinos):
         print("Destinos não alcançados:", destinos_restantes)
     
     return caminho if not destinos_restantes else caminho, destinos_restantes
-=======
 
 def calcular_graus(grafo):
     graus = {no: len(vizinhos) for no, vizinhos in grafo.items()}
@@ -334,7 +324,6 @@ def verificar_subgrafo(grafo, subgrafo):
             if vizinho not in grafo[no]:
                 return False
     return True
->>>>>>> cd6c96b41a855d25574319de10d716eb2b84c918
 
 def prim_mst(graph, vertices):
     """Gera uma árvore de abrangência mínima (MST) usando o algoritmo de Prim sem considerar pesos."""
@@ -411,6 +400,24 @@ def generate_spanning_trees(graph, vertices, k):
     
     return trees
 
+def gerar_arvore_abrangencia(grafo, inicio):
+    """
+    Gera uma árvore de abrangência a partir de um nó inicial usando DFS.
+    """
+    arvore = []
+    visitado = set()
+    
+    def dfs(no, pai):
+        visitado.add(no)
+        for vizinho in grafo[no]:
+            if vizinho not in visitado:
+                arvore.append((no, vizinho))
+                dfs(vizinho, no)
+    
+    dfs(inicio, None)
+    
+    # Retorna como conjunto de arestas para facilitar comparações
+    return set(arvore)
 
 def calcular_distancia_arvores(A1, A2):
     # Inicializa o contador de distância
@@ -430,6 +437,56 @@ def calcular_distancia_arvores(A1, A2):
     
     return distancia
 
+def encontrar_arvore_central(grafo):
+    """
+    Encontra a árvore central do grafo.
+    """
+    arvores = {}
+    vertices = list(grafo.keys())
+
+    # Gera todas as árvores de abrangência a partir de cada vértice
+    for v in vertices:
+        arvores[v] = gerar_arvore_abrangencia(grafo, v)
+
+    # Calcula todas as distâncias entre as árvores
+    distancias = {v: {} for v in vertices}
+    for (v1, v2) in itertools.combinations(vertices, 2):
+        distancia = calcular_distancia_arvores(arvores[v1], arvores[v2])
+        distancias[v1][v2] = distancia
+        distancias[v2][v1] = distancia
+
+    # Para cada árvore, calcula a maior distância em relação às outras
+    max_distancias = {v: max(distancias[v].values()) for v in vertices}
+
+    # Encontra a árvore com a menor distância máxima
+    arvore_central = max(max_distancias, key=max_distancias.get)
+    
+    return arvore_central, arvores[arvore_central]
+
+def obter_lista_adjacencia_arvore_central(grafo):
+    """
+    Converte a árvore central encontrada em uma lista de adjacência.
+
+    Parâmetros:
+        arvore_central (list of tuple): Lista de arestas representando a árvore central.
+
+    Retorno:
+        dict: Lista de adjacência da árvore central.
+    """
+    arvore_central = encontrar_arvore_central(grafo)[1]
+    lista_adjacencia = {}
+
+    for u, v in arvore_central:
+        if u not in lista_adjacencia:
+            lista_adjacencia[u] = []
+        if v not in lista_adjacencia:
+            lista_adjacencia[v] = []
+
+        # Adiciona as conexões (grafo não direcionado)
+        lista_adjacencia[u].append(v)
+        lista_adjacencia[v].append(u)
+
+    return lista_adjacencia
 
 def bfs(graph, start):
     distances = {node: float('inf') for node in graph}
@@ -524,7 +581,6 @@ def eulerian_path_or_cycle(G):
         return "O grafo possui um caminho euleriano."
     else:
         return "O grafo não possui caminho ou circuito euleriano."
-<<<<<<< HEAD
 
 #----------------------- Plot grafos
 def plotar_subgrafo(grafo, n):
@@ -635,6 +691,34 @@ def plotar_no_com_vizinhos(grafo, no):
     nx.draw(subgrafo, with_labels=True, node_size=500, font_size=12, font_color="black", node_color="skyblue")
     plt.show()
 
+def adj_list_to_nx(lista_adjacencia):
+    G = nx.Graph()
+
+    # Adiciona vértices e arestas
+    for vertice, vizinhos in lista_adjacencia.items():
+        for vizinho in vizinhos:
+            G.add_edge(vertice, vizinho)
+
+    return G
+
+def plotar_lista_adj(lista_adjacencia, k, iter):
+    """
+    Plota um grafo a partir de uma lista de adjacência.
+    
+    Parâmetros:
+        lista_adjacencia (dict): Dicionário representando o grafo, onde as chaves são os vértices
+                                 e os valores são listas de vértices adjacentes.
+    """
+    G = adj_list_to_nx(lista_adjacencia)
+
+    # Desenha o grafo
+    plt.figure(figsize=(12, 9))
+    pos = nx.spring_layout(G, k=k, iterations=iter)  # Ajusta a dispersão dos nós
+    nx.draw(G, pos, with_labels=True, node_color='lightblue', edge_color='gray', node_size=1000, font_size=10, font_weight='bold')
+
+    plt.title("Representação do Grafo a partir da Lista de Adjacência")
+    plt.show()
+
 def plotar_grafo_com_graus(grafo):
     # Calcula os graus de cada nó
     graus = dict(grafo.degree())
@@ -669,5 +753,3 @@ def plotar_subgrafo_lista(grafo, vertices):
     # Exibe o plot
     plt.title("Subgrafo com vértices selecionados")
     plt.show()
-=======
->>>>>>> cd6c96b41a855d25574319de10d716eb2b84c918
