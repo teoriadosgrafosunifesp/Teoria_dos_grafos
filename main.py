@@ -2,7 +2,7 @@ from matplotlib import pyplot as plt
 import networkx as nx
 import csv
 
-from grafos.grafos import analise_robustez, calcular_distancia_arvores, calcular_graus, caminho_dfs, cortes_fundamentais, edges_to_dict, eh_euleriano, eh_hamiltoniano, encontrar_ciclo, eulerian_path_or_cycle, existe_aresta_matriz_adjacencia, find_center_tree, generate_spanning_trees, gerar_lista_adjacencia, gerar_matriz_adjacencia, gerar_matriz_incidencia, grau_vertice_matriz_adjacencia, numero_vertices, subgrafo_ou_vice_versa, verificar_subgrafo, vertices_adjacentes
+from grafos.grafos import analise_robustez, calcular_distancia_arvores, calcular_graus, caminho_dfs, cortes_fundamentais, edges_to_dict, eh_euleriano, eh_hamiltoniano, encontrar_ciclo, eulerian_path_or_cycle, existe_aresta_matriz_adjacencia, find_center_tree, generate_spanning_trees, gerar_lista_adjacencia, gerar_matriz_adjacencia, gerar_matriz_incidencia, grau_vertice_lista_adjacencia, grau_vertice_matriz_adjacencia, graus_grafo_lista_adjacencia, numero_vertices, subgrafo_ou_vice_versa, verificar_subgrafo, vertices_adjacentes
 
 def visualizar_arvore_central(central_tree):
     T = nx.Graph(central_tree)
@@ -13,6 +13,16 @@ def visualizar_arvore_central(central_tree):
 def visualizar_grafo(G):
     plt.figure(figsize=(8, 6))
     nx.draw(G, with_labels=True, node_color='lightblue', edge_color='black', node_size=2000, font_size=10)
+    plt.show()
+
+def plotar_subgrafo(G, vertice):
+    adjacentes = list(G.neighbors(vertice))  # Obter os vértices adjacentes ao vértice escolhido
+    # Subgrafo inclui o vértice e seus adjacentes
+    subgrafo = G.subgraph([vertice] + adjacentes)
+    
+    # Plota o subgrafo
+    nx.draw(subgrafo, with_labels=True, node_color='skyblue', node_size=2000, font_size=10, font_weight='bold', edge_color='gray')
+    plt.title(f"Subgrafo de {vertice} e seus adjacentes")
     plt.show()
 
 # Funções para carregar grafos
@@ -86,9 +96,9 @@ def gerar_comando_com_funcao(grafos):
         print("7 - Listar grafos carregados")
         print("8 - Encontrar ciclo em um grafo")
         print("9 - Encontrar caminho DFS entre dois vértices")
-        print("10 - Verificar se existe aresta entre dois vértices na matriz de adjacência")
+        print("10 - Verificar se existe aresta entre dois vértices")
         print("11 - Verificar vértices adjacentes de um vértice")
-        print("12 - Verificar grau de um vértice na matriz de adjacência")
+        print("12 - Verificar grau de um vértice")
         print("13 - Contar o número de vértices em um grafo")
         print("14 - Gerar árvores geradoras de um grafo")
         print("15 - Calcular distância entre duas árvores de abrangência")
@@ -99,7 +109,8 @@ def gerar_comando_com_funcao(grafos):
         print("20 - Verificar se o grafo é euleriano?")
         print("21 - Verificar se o grafo é hamiltoniano?")
         print("22 - Análise de Robustez, Pontos de Articulação Identificados, Arestas Críticas Encontrada e  Acessibilidade Avaliada")
-        
+        print("23 - Grau de Todos os Vértices")
+        print("24 - Grau de um Vértice")
         print("0 - Sair")
         
         opcao = input("Opção: ")
@@ -109,8 +120,8 @@ def gerar_comando_com_funcao(grafos):
             print("\nGrafos carregados:")
             for i, G in enumerate(grafos):
                 print(f"Grafo {i+1}: {list(G.nodes)}")
-        elif opcao in ["1", "2", "3", "4", "5", "6", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22"]:
-            if len(grafos) > 1 and opcao in ["1", "2", "3", "5", "8", "9", "10", "11", "12", "13", "14", "18", "20", "21", "22"]:
+        elif opcao in ["1", "2", "3", "4", "5", "6", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24"]:
+            if len(grafos) > 1 and opcao in ["1", "2", "3", "5", "8", "9", "10", "11", "12", "13", "14", "18", "20", "21", "22", "23", "24"]:
                 print("\nEscolha qual grafo utilizar:")
                 for i, G in enumerate(grafos):
                     print(f"{i+1} - Grafo {i+1}")
@@ -175,6 +186,10 @@ def gerar_comando_com_funcao(grafos):
                 vertice = input("Digite o vértice para verificar os adjacentes: ")
                 adjacentes = vertices_adjacentes(dict(G.adjacency()), vertice)
                 print(f"Vértices adjacentes a {vertice}: {adjacentes}")
+                
+                plotar = input("Deseja plotar o grafo? (s/n): ").strip().lower()
+                if plotar == 's':
+                    plotar_subgrafo(G, vertice)
             elif opcao == "12":  # Grau de vértice
                 matriz_adjacencia = gerar_matriz_adjacencia(dict(G.adjacency()))
                 vertice = int(input("Digite o vértice para verificar seu grau: "))
@@ -282,6 +297,9 @@ def gerar_comando_com_funcao(grafos):
                 print(resultado)
             elif opcao == "22":
                 analise_robustez(G)
+            elif opcao == "23":
+                lista_adjacencia = {k: list(v) for k, v in G.adjacency()}
+                resultado = graus_grafo_lista_adjacencia(lista_adjacencia)
         else:
             print("Opção inválida.")
 
