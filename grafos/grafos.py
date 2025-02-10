@@ -47,7 +47,6 @@ def isGrafo(entrada):
     return True
 
 
-
 def gerar_grafo_a_partir_matriz(matriz_adjacencia):
     # Número de vértices no grafo
     n = len(matriz_adjacencia)
@@ -550,7 +549,7 @@ def is_connected(graph, n):
                 dfs(neighbor)
     
     # Iniciar DFS a partir do primeiro vértice (supondo que o grafo tenha pelo menos um vértice)
-    dfs(0)
+    dfs(graph[0])
     
     return all(visited)
 
@@ -561,6 +560,46 @@ def check_degrees(graph, n):
         if len(graph[i]) % 2 != 0:
             odd_degree_vertices += 1
     return odd_degree_vertices
+
+def eh_euleriano(lista_adjacencia):
+    """ Verifica se um grafo é Euleriano e retorna o circuito Euleriano caso exista. """
+    if not(is_connected(lista_adjacencia, len(lista_adjacencia))):
+        return False, None
+    
+    G = nx.Graph(lista_adjacencia)
+    
+    # Verifica se todos os vértices têm grau par
+    if all(G.degree(v) % 2 == 0 for v in G.nodes) and nx.is_connected(G):
+        circuito = list(nx.eulerian_circuit(G))
+        # Cria a lista de adjacência apenas com o circuito Euleriano
+        circuito_lista = {v: [] for v in G.nodes}
+        for u, v in circuito:
+            circuito_lista[u].append(v)
+            circuito_lista[v].append(u)
+        return True, circuito_lista
+    return False, None
+
+
+def eh_hamiltoniano(lista_adjacencia):
+    """ Verifica se um grafo é Hamiltoniano e retorna o circuito Hamiltoniano caso exista. """
+    if not(is_connected(lista_adjacencia, len(lista_adjacencia))):
+        return False, None
+    G = nx.Graph(lista_adjacencia)
+    n = len(G.nodes)
+    
+    # Verificação dos teoremas de Dirac e Ore (condições suficientes, mas não necessárias)
+    if all(G.degree(v) >= n / 2 for v in G.nodes) or all(G.degree(u) + G.degree(v) >= n for u, v in nx.non_edges(G)):
+        # Usa o algoritmo de busca por ciclo Hamiltoniano (Heurístico)
+        ciclo_hamiltoniano = nx.approximation.traveling_salesman_problem(G, cycle=True)
+        
+        # Cria a lista de adjacência apenas com o circuito Hamiltoniano encontrado
+        hamilton_lista = {v: [] for v in G.nodes}
+        for i in range(len(ciclo_hamiltoniano) - 1):
+            u, v = ciclo_hamiltoniano[i], ciclo_hamiltoniano[i + 1]
+            hamilton_lista[u].append(v)
+            hamilton_lista[v].append(u)
+        return True, hamilton_lista
+    return False, None
 
 # Função para verificar se o grafo tem caminho ou circuito euleriano
 def eulerian_path_or_cycle(G):
