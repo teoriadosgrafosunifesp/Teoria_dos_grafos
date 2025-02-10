@@ -32,6 +32,10 @@ def busca_grafo(txt):
 G = busca_grafo("Grafo Avianca.csv")
 
 G_adj = grafos.grafo_para_lista_adjacencia(G)
+E = grafos.numero_arestas_lista_adjacencia(G_adj)
+V = grafos.numero_vertices(G_adj)
+print(E)
+print(V)
 #grafos.plotar_lista_adj(G_adj, 0.9, 60)
 
 #-----------------------------1. Ache sua árvore central
@@ -39,20 +43,20 @@ G_adj = grafos.grafo_para_lista_adjacencia(G)
 #grafos.plotar_lista_adj(central_tree, 0.9, 60)
 
 #-----------------------------2. Verifique se o grafo representativo de seu problema é euleriano
-isEuler, euler_cycle = grafos.eh_euleriano(G_adj)
-if isEuler:
-    print("Tem ciclo euleriano")
-    grafos.plotar_lista_adj(euler_cycle, 0.9, 60)
-else:
-    print("Não é euleriano")
+# isEuler, euler_cycle = grafos.eh_euleriano(G_adj)
+# if isEuler:
+#     print("Tem ciclo euleriano")
+#     grafos.plotar_lista_adj(euler_cycle, 0.9, 60)
+# else:
+#     print("Não é euleriano")
 
 #-----------------------------3 Verifique se o grafo representativo do seu problema é hamiltoniano.
-isHamil, hamil_cycle = grafos.eh_hamiltoniano(G_adj)
-if isHamil:
-    print("Tem ciclo hamiltoniano")
-    grafos.plotar_lista_adj(hamil_cycle, 0.9, 60)
-else:
-    print("Não é hamiltoniano")
+#isHamil, hamil_cycle = grafos.eh_hamiltoniano(G_adj)
+#if isHamil:
+#    print("Tem ciclo hamiltoniano")
+#    grafos.plotar_lista_adj(hamil_cycle, 0.9, 60)
+#else:
+#    print("Não é hamiltoniano")
 
 #-----------------------------4. Determina algum corte fundamental para o grafo representativo do seu problema.
 

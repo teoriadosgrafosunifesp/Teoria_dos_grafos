@@ -539,19 +539,30 @@ def find_center_tree(graph):
     return center, central_tree
 
 # Função para verificar se o grafo é conexo
-def is_connected(graph, n):
-    visited = [False] * n
+def is_connected(lista_adjacencia):
+    """
+    Verifica se um grafo representado por lista de adjacência é conectado.
+    Retorna True se for conectado e False caso contrário.
+    """
+    if not lista_adjacencia:
+        return False  # Grafo vazio não é conectado
     
+    # Pegamos um vértice qualquer para iniciar a DFS
+    vertice_inicial = next(iter(lista_adjacencia))  
+    visitados = set()
+    
+    # Função auxiliar de DFS
     def dfs(v):
-        visited[v] = True
-        for neighbor in graph[v]:
-            if not visited[neighbor]:
-                dfs(neighbor)
+        visitados.add(v)
+        for vizinho in lista_adjacencia.get(v, []):
+            if vizinho not in visitados:
+                dfs(vizinho)
+
+    # Inicia a busca em profundidade
+    dfs(vertice_inicial)
     
-    # Iniciar DFS a partir do primeiro vértice (supondo que o grafo tenha pelo menos um vértice)
-    dfs(graph[0])
-    
-    return all(visited)
+    # Se todos os vértices foram visitados, o grafo é conectado
+    return len(visitados) == len(lista_adjacencia)
 
 # Função para verificar o grau de cada vértice
 def check_degrees(graph, n):
@@ -563,7 +574,7 @@ def check_degrees(graph, n):
 
 def eh_euleriano(lista_adjacencia):
     """ Verifica se um grafo é Euleriano e retorna o circuito Euleriano caso exista. """
-    if not(is_connected(lista_adjacencia, len(lista_adjacencia))):
+    if not(is_connected(lista_adjacencia)):
         return False, None
     
     G = nx.Graph(lista_adjacencia)
@@ -582,7 +593,7 @@ def eh_euleriano(lista_adjacencia):
 
 def eh_hamiltoniano(lista_adjacencia):
     """ Verifica se um grafo é Hamiltoniano e retorna o circuito Hamiltoniano caso exista. """
-    if not(is_connected(lista_adjacencia, len(lista_adjacencia))):
+    if not(is_connected(lista_adjacencia)):
         return False, None
     G = nx.Graph(lista_adjacencia)
     n = len(G.nodes)
@@ -609,7 +620,7 @@ def eulerian_path_or_cycle(G):
     # Número de vértices
     n = len(G.nodes)
     
-    if not is_connected(graph, n):
+    if not is_connected(graph):
         return "Não é conexo, não há caminho ou circuito euleriano."
     
     odd_degree_count = check_degrees(graph, n)
