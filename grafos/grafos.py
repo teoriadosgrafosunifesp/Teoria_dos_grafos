@@ -572,7 +572,8 @@ def check_degrees(graph, n):
             odd_degree_vertices += 1
     return odd_degree_vertices
 
-def eh_euleriano(lista_adjacencia):
+def eh_euleriano(G):
+    lista_adjacencia = {k: list(v) for k, v in G.adjacency()}
     """ Verifica se um grafo é Euleriano e retorna o circuito Euleriano caso exista. """
     if not(is_connected(lista_adjacencia)):
         return False, None
@@ -591,7 +592,8 @@ def eh_euleriano(lista_adjacencia):
     return False, None
 
 
-def eh_hamiltoniano(lista_adjacencia):
+def eh_hamiltoniano(G):
+    lista_adjacencia = {k: list(v) for k, v in G.adjacency()}
     """ Verifica se um grafo é Hamiltoniano e retorna o circuito Hamiltoniano caso exista. """
     if not(is_connected(lista_adjacencia)):
         return False, None
