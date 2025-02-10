@@ -71,7 +71,6 @@ __pyinstaller/
 *.migrations/
 
 # Arquivos de dados
-*.csv
 *.dat
 *.db
 *.sqlite3

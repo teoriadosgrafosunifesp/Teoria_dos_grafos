@@ -908,3 +908,34 @@ def plotar_cortes_fundamentais(G, cortes, k, iter):
 
     plt.title("Grafo com Arestas de Corte em Vermelho")
     plt.show()
+
+
+def analyze_robustness(G, nodes_to_remove):
+    G_copy = G.copy()
+    G_copy.remove_nodes_from(nodes_to_remove)
+    largest_cc = max(nx.connected_components(G_copy), key=len, default=[])
+    return len(largest_cc)
+
+
+def analise_robustez(G):
+    # Encontrar pontos de articulação (nós cuja remoção desconecta o grafo)
+    articulation_points = list(nx.articulation_points(G))
+
+    # Encontrar arestas críticas (arestas cuja remoção desconecta o grafo)
+    bridges = list(nx.bridges(G))
+
+    print(f"Pontos de articulação (nós críticos): {articulation_points}")
+    print(f"Arestas críticas (bridges): {bridges}")
+    
+    # Simular a remoção de nós críticos
+    for node in articulation_points:
+        new_size = analyze_robustness(G, [node])
+        print(f"Removendo {node}, o maior componente agora tem {new_size} nós.")
+    
+    # Encontrar componentes conexos no grafo
+    connected_components = list(nx.connected_components(G))
+    num_components = len(connected_components)
+
+    print(f"Número de componentes conexos no grafo: {num_components}")
+    for i, component in enumerate(connected_components):
+        print(f"Componente {i+1}: {component}")
