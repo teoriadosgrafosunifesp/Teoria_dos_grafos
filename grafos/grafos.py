@@ -118,9 +118,9 @@ def gerar_lista_adjacencia(grafo):
     # Inicializa a lista de adjacência
     lista_adjacencia = {}
     
-    # Adiciona cada vértice e suas conexões
+    # Para cada vértice, extrai as chaves dos vizinhos (adjacências)
     for vertice, vizinhos in grafo.items():
-        lista_adjacencia[vertice] = vizinhos[:]
+        lista_adjacencia[vertice] = list(vizinhos.keys())
     
     return lista_adjacencia
 

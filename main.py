@@ -105,7 +105,7 @@ def gerar_comando_com_funcao(grafos):
             for i, G in enumerate(grafos):
                 print(f"Grafo {i+1}: {list(G.nodes)}")
         elif opcao in ["1", "2", "3", "4", "5", "6", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18"]:
-            if len(grafos) > 1:
+            if len(grafos) > 1 and opcao in ["1", "2", "3", "5", "8", "9", "10", "11", "12", "13", "14", "18"]:
                 print("\nEscolha qual grafo utilizar:")
                 for i, G in enumerate(grafos):
                     print(f"{i+1} - Grafo {i+1}")
