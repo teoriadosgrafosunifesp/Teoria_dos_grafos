@@ -878,3 +878,31 @@ def cortes_fundamentais(G, T):
                             corte.add(tuple(sorted((w, viz))))
                 cortes[tuple(sorted((u, v)))] = corte
     return cortes
+
+def plotar_cortes_fundamentais(G, cortes, k, iter):
+    """
+    Recebe:
+      - G: Grafo original representado como um dicionário de adjacência.
+      - cortes: Dicionário retornado pela função cortes_fundamentais(G, T), 
+                onde as chaves são arestas da árvore e os valores são conjuntos 
+                de arestas de corte fundamental.
+
+    Retorna:
+      - Um plot do grafo com as arestas de corte fundamental destacadas em vermelho.
+    """
+    # Criar o grafo do networkx
+    G_nx = adj_list_to_nx(G)
+
+    # Criar layout
+    plt.figure(figsize=(12, 9))
+    pos = nx.spring_layout(G_nx, k=k, iterations=iter)
+
+    # Desenhar todas as arestas normais em cinza
+    nx.draw(G_nx, pos, with_labels=True, node_color="lightblue", edge_color="gray", node_size=1000, font_size=10, font_weight="bold")
+
+    # Desenhar as arestas de corte em vermelho
+    for corte in cortes.values():
+        nx.draw_networkx_edges(G_nx, pos, edgelist=list(corte), edge_color="red", width=2.5)
+
+    plt.title("Grafo com Arestas de Corte em Vermelho")
+    plt.show()

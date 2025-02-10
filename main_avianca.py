@@ -34,8 +34,7 @@ G = busca_grafo("Grafo Avianca.csv")
 G_adj = grafos.grafo_para_lista_adjacencia(G)
 E = grafos.numero_arestas_lista_adjacencia(G_adj)
 V = grafos.numero_vertices(G_adj)
-print(E)
-print(V)
+
 #grafos.plotar_lista_adj(G_adj, 0.9, 60)
 
 #-----------------------------1. Ache sua árvore central
