@@ -792,3 +792,78 @@ def plotar_subgrafo_lista(grafo, vertices):
     # Exibe o plot
     plt.title("Subgrafo com vértices selecionados")
     plt.show()
+
+def edges_to_dict(edges):
+    """
+    Converte uma lista de arestas (tuplas) em um dicionário de adjacência.
+    Cada vértice é uma chave, e o valor é um dicionário com os seus vizinhos.
+    Como o grafo é não direcionado, cada aresta é inserida em ambas as direções.
+    """
+    graph = {}
+    for u, v in edges:
+        if u not in graph:
+            graph[u] = {}
+        if v not in graph:
+            graph[v] = {}
+        # Insere a aresta nas duas direções
+        graph[u][v] = {}
+        graph[v][u] = {}
+    return graph
+
+def obter_componente(T, inicio, aresta_bloqueada):
+    """
+    Executa uma busca em profundidade (DFS) em T a partir do vértice 'inicio',
+    ignorando a aresta 'aresta_bloqueada' (considerada com ordem canônica).
+    Retorna o conjunto de vértices atingíveis (a componente conexa que contém 'inicio').
+    """
+    aresta_bloqueada = tuple(sorted(aresta_bloqueada))
+    visitados = set()
+    pilha = [inicio]
+    
+    while pilha:
+        atual = pilha.pop()
+        if atual not in visitados:
+            visitados.add(atual)
+            for vizinho in T[atual]:
+                # Ignora a aresta bloqueada
+                if tuple(sorted((atual, vizinho))) == aresta_bloqueada:
+                    continue
+                if vizinho not in visitados:
+                    pilha.append(vizinho)
+    return visitados
+
+def cortes_fundamentais(G, T):
+    """
+    Recebe:
+      - G: grafo completo representado como dicionário de adjacência {vértice: {vizinhos: {}}}
+      - T: árvore de abrangência de G, representada no mesmo formato
+    Retorna:
+      - Um dicionário cujas chaves são arestas da árvore (tupla (u, v) com u < v)
+        e os valores são conjuntos com as arestas de G que compõem o corte fundamental
+        associado à remoção da aresta da árvore.
+        
+    Se G e/ou T forem fornecidos como listas de arestas, eles serão convertidos.
+    """
+    # Converte para dicionário se os parâmetros forem listas
+    if isinstance(G, list):
+        G = edges_to_dict(G)
+    if isinstance(T, list):
+        T = edges_to_dict(T)
+    
+    cortes = {}
+    
+    # Itera apenas sobre as arestas de T (evitando duplicação com u < v)
+    for u in T:
+        for v in T[u]:
+            if u < v:
+                # Remove virtualmente a aresta (u, v) e obtém a componente que contém u
+                comp = obter_componente(T, u, (u, v))
+                # Em G, o corte fundamental é o conjunto de arestas que ligam
+                # um vértice da componente a um vértice fora dela.
+                corte = set()
+                for w in comp:
+                    for viz in G[w]:
+                        if viz not in comp:
+                            corte.add(tuple(sorted((w, viz))))
+                cortes[tuple(sorted((u, v)))] = corte
+    return cortes

@@ -2,7 +2,7 @@ from matplotlib import pyplot as plt
 import networkx as nx
 import csv
 
-from grafos.grafos import calcular_distancia_arvores, calcular_graus, caminho_dfs, encontrar_ciclo, eulerian_path_or_cycle, existe_aresta_matriz_adjacencia, find_center_tree, generate_spanning_trees, gerar_lista_adjacencia, gerar_matriz_adjacencia, gerar_matriz_incidencia, grau_vertice_matriz_adjacencia, numero_vertices, subgrafo_ou_vice_versa, verificar_subgrafo, vertices_adjacentes
+from grafos.grafos import calcular_distancia_arvores, calcular_graus, caminho_dfs, cortes_fundamentais, edges_to_dict, encontrar_ciclo, eulerian_path_or_cycle, existe_aresta_matriz_adjacencia, find_center_tree, generate_spanning_trees, gerar_lista_adjacencia, gerar_matriz_adjacencia, gerar_matriz_incidencia, grau_vertice_matriz_adjacencia, numero_vertices, subgrafo_ou_vice_versa, verificar_subgrafo, vertices_adjacentes
 
 def visualizar_arvore_central(central_tree):
     T = nx.Graph(central_tree)
@@ -95,6 +95,8 @@ def gerar_comando_com_funcao(grafos):
         print("16 - Determinar árvore central")
         print("17 - Visualizar o grafo")
         print("18 - Verificar se o grafo possui circuito ou caminho euleriano")
+        print("19 - Gerar Cortes das Arestas Fundamentais")
+        
         print("0 - Sair")
         
         opcao = input("Opção: ")
@@ -104,7 +106,7 @@ def gerar_comando_com_funcao(grafos):
             print("\nGrafos carregados:")
             for i, G in enumerate(grafos):
                 print(f"Grafo {i+1}: {list(G.nodes)}")
-        elif opcao in ["1", "2", "3", "4", "5", "6", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18"]:
+        elif opcao in ["1", "2", "3", "4", "5", "6", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19"]:
             if len(grafos) > 1 and opcao in ["1", "2", "3", "5", "8", "9", "10", "11", "12", "13", "14", "18"]:
                 print("\nEscolha qual grafo utilizar:")
                 for i, G in enumerate(grafos):
@@ -247,6 +249,28 @@ def gerar_comando_com_funcao(grafos):
             elif opcao == "18":  # Existe aresta
                 resultado = eulerian_path_or_cycle(G)
                 print(resultado)
+            elif opcao == "19":
+                if len(grafos) > 1:
+                    print("\nEscolha um grafo e uma árvores de abrangência para realizar os cortes:")
+                    for i, G in enumerate(grafos):
+                        print(f"{i+1} - Grafo {i+1}")
+                    escolha1 = int(input("Escolha o grafo: ")) - 1
+                    escolha2 = int(input("Escolha a árvore de abrangência: ")) - 1
+                    
+                    # Verifica se os grafos selecionados são árvores de abrangência
+                    if nx.is_tree(grafos[escolha2]):
+                        # Converte as árvores em listas de arestas
+                        A1 = list(grafos[escolha1].edges())
+                        A2 = list(grafos[escolha2].edges())
+                        
+                        # Calcula a distância entre as árvores
+                        cortes = cortes_fundamentais(A1, A2)
+                        for aresta, corte in cortes.items():
+                            print(f"Corte fundamental da aresta {aresta}: {corte}")
+                    else:
+                        print("houve um erro .")
+                else:
+                    print("Não há grafos suficientes para comparar.")
         else:
             print("Opção inválida.")
 
