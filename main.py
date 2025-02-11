@@ -2,7 +2,7 @@ from matplotlib import pyplot as plt
 import networkx as nx
 import csv
 
-from grafos.grafos import analise_robustez, calcular_distancia_arvores, calcular_graus, caminho_dfs, cortes_fundamentais, edges_to_dict, eh_euleriano, eh_hamiltoniano, encontrar_ciclo, eulerian_path_or_cycle, existe_aresta_matriz_adjacencia, find_center_tree, generate_spanning_trees, gerar_lista_adjacencia, gerar_matriz_adjacencia, gerar_matriz_incidencia, grau_vertice_lista_adjacencia, grau_vertice_matriz_adjacencia, graus_grafo_lista_adjacencia, numero_vertices, subgrafo_ou_vice_versa, verificar_subgrafo, vertices_adjacentes
+from grafos.grafos import analise_robustez, calcular_distancia_arvores, calcular_graus, caminho_dfs, cortes_fundamentais, edges_to_dict, eh_euleriano, eh_hamiltoniano, encontrar_ciclo, eulerian_path_or_cycle, existe_aresta_matriz_adjacencia, find_center_tree, generate_all_spanning_trees, gerar_lista_adjacencia, gerar_matriz_adjacencia, gerar_matriz_incidencia, grau_vertice_lista_adjacencia, grau_vertice_matriz_adjacencia, graus_grafo_lista_adjacencia, numero_vertices, subgrafo_ou_vice_versa, verificar_subgrafo, vertices_adjacentes
 
 def visualizar_arvore_central(central_tree):
     T = nx.Graph(central_tree)
@@ -110,7 +110,6 @@ def gerar_comando_com_funcao(grafos):
         print("21 - Verificar se o grafo é hamiltoniano?")
         print("22 - Análise de Robustez, Pontos de Articulação Identificados, Arestas Críticas Encontrada e  Acessibilidade Avaliada")
         print("23 - Grau de Todos os Vértices")
-        print("24 - Grau de um Vértice")
         print("0 - Sair")
         
         opcao = input("Opção: ")
@@ -120,8 +119,8 @@ def gerar_comando_com_funcao(grafos):
             print("\nGrafos carregados:")
             for i, G in enumerate(grafos):
                 print(f"Grafo {i+1}: {list(G.nodes)}")
-        elif opcao in ["1", "2", "3", "4", "5", "6", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24"]:
-            if len(grafos) > 1 and opcao in ["1", "2", "3", "5", "8", "9", "10", "11", "12", "13", "14", "18", "20", "21", "22", "23", "24"]:
+        elif opcao in ["1", "2", "3", "4", "5", "6", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"]:
+            if len(grafos) > 1 and opcao in ["1", "2", "3", "5", "8", "9", "10", "11", "12", "13", "14", "18", "20", "21", "22", "23"]:
                 print("\nEscolha qual grafo utilizar:")
                 for i, G in enumerate(grafos):
                     print(f"{i+1} - Grafo {i+1}")
@@ -207,7 +206,7 @@ def gerar_comando_com_funcao(grafos):
                     k = len(vertices) * (len(vertices) - 1) // 2  # Um número alto para gerar todas as árvores
                 
                 # Chama a função generate_spanning_trees
-                trees = generate_spanning_trees(dict(G.adjacency()), vertices, k)
+                trees = generate_all_spanning_trees(dict(G.adjacency()), vertices, k)
                 
                 # Exibe as árvores geradoras
                 for i, tree in enumerate(trees):
@@ -288,7 +287,7 @@ def gerar_comando_com_funcao(grafos):
                     else:
                         print("houve um erro .")
                 else:
-                    print("Não há grafos suficientes para comparar.")
+                    print("Não há grafos suficientes para comparar (Grafo e Arvore de abrangencia).")
             elif opcao == "20":
                 resultado = eh_euleriano(G)
                 print(resultado)
@@ -300,6 +299,7 @@ def gerar_comando_com_funcao(grafos):
             elif opcao == "23":
                 lista_adjacencia = {k: list(v) for k, v in G.adjacency()}
                 resultado = graus_grafo_lista_adjacencia(lista_adjacencia)
+                print(resultado)
         else:
             print("Opção inválida.")
 
