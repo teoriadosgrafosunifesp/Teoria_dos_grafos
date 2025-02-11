@@ -5,6 +5,7 @@ import random
 from collections import defaultdict, deque
 import itertools
 import copy
+import collections
 
 def gerar_matriz_adjacencia(grafo):
     # Extrai os vértices do grafo
@@ -1100,6 +1101,49 @@ def plotar_cortes_fundamentais(G, cortes, k=0.1, iter=50):
     plt.show()
 
 
+def calcular_excentricidades(grafo):
+    """
+    Calcula a excentricidade de cada vértice de um grafo.
+    
+    Parâmetros:
+      grafo: dict
+             Representa o grafo como uma lista de adjacência. Por exemplo:
+             {
+                 'A': ['B', 'C'],
+                 'B': ['A', 'D'],
+                 'C': ['A', 'D'],
+                 'D': ['B', 'C', 'E'],
+                 'E': ['D']
+             }
+    
+    Retorna:
+      Um dicionário onde cada chave é um vértice e o valor é a sua excentricidade.
+      Se o vértice não alcançar todos os outros (grafo desconexo), a excentricidade será float('inf').
+    """
+    excentricidades = {}
+    
+    # Para cada vértice, fazemos uma busca em largura (BFS) para encontrar as distâncias mínimas a todos os outros vértices.
+    for vertice in grafo:
+        # dicionário para armazenar as distâncias mínimas a partir do vértice atual
+        distancias = {}
+        fila = deque()
+        fila.append(vertice)
+        distancias[vertice] = 0
+        
+        while fila:
+            atual = fila.popleft()
+            for vizinho in grafo.get(atual, []):
+                if vizinho not in distancias:
+                    distancias[vizinho] = distancias[atual] + 1
+                    fila.append(vizinho)
+        
+        # Se nem todos os vértices foram alcançados, consideramos a excentricidade como infinita.
+        if len(distancias) < len(grafo):
+            excentricidades[vertice] = float('inf')
+        else:
+            excentricidades[vertice] = max(distancias.values())
+    
+    return excentricidades
 
 def analyze_robustness(G, nodes_to_remove):
     G_copy = G.copy()
@@ -1175,3 +1219,108 @@ def num_componentes_apos_remocao(grafo, vertice_removido):
             componentes += 1
 
     return componentes
+
+
+def bfs_distance(graph, start, target):
+    """
+    Calcula a distância mínima (em número de arestas) entre 'start' e 'target'
+    usando busca em largura (BFS). Se não houver caminho, retorna float('inf').
+    """
+    if start == target:
+        return 0
+    visited = {start}
+    queue = collections.deque([(start, 0)])
+    while queue:
+        current, dist = queue.popleft()
+        for neighbor in graph.get(current, []):
+            if neighbor == target:
+                return dist + 1
+            if neighbor not in visited:
+                visited.add(neighbor)
+                queue.append((neighbor, dist + 1))
+    return float('inf')
+
+def eulerize_graph(graph):
+    """
+    Recebe um grafo (em lista de adjacência) e retorna uma lista de novas arestas 
+    (como tuplas (u, v)) que devem ser adicionadas para que o grafo se torne Euleriano.
+
+    Critérios:
+      - Apenas vértices de grau ímpar são emparelhados.
+      - Não se liga vértices que já estão adjacentes.
+      - Entre os pares permitidos, escolhe-se aqueles cuja distância (número de arestas) 
+        seja mínima.
+    """
+    INF = float('inf')
+    
+    # 1. Identifica os vértices de grau ímpar.
+    odd_vertices = [v for v in graph if len(graph[v]) % 2 == 1]
+    n = len(odd_vertices)
+    if n == 0:
+        # Se não houver vértices de grau ímpar, o grafo já é Euleriano.
+        return []
+    
+    # 2. Constroi uma matriz de custos entre os vértices ímpares.
+    # Se dois vértices já são adjacentes, o custo será INF (não permitimos nova ligação).
+    cost_matrix = [[INF] * n for _ in range(n)]
+    for i in range(n):
+        for j in range(n):
+            if i == j:
+                cost_matrix[i][j] = 0
+            else:
+                # Se já existe ligação direta, não permitimos adicionar outra.
+                if odd_vertices[j] in graph.get(odd_vertices[i], []):
+                    cost_matrix[i][j] = INF
+                else:
+                    cost_matrix[i][j] = bfs_distance(graph, odd_vertices[i], odd_vertices[j])
+    
+    # 3. Encontrar o emparelhamento perfeito mínimo usando programação dinâmica com bitmask.
+    memo = {}
+    
+    def dp(mask):
+        """
+        Para um subconjunto de vértices (representado por 'mask', onde cada bit 1 indica
+        que o vértice correspondente (na lista odd_vertices) ainda não foi emparelhado),
+        retorna uma tupla (custo, pares) onde:
+          - custo: custo total mínimo para emparelhar esses vértices.
+          - pares: lista de tuplas (i, j) representando os índices dos vértices emparelhados.
+        """
+        if mask == 0:
+            return 0, []
+        if mask in memo:
+            return memo[mask]
+        
+        # Escolhe o primeiro vértice ainda não emparelhado.
+        i = 0
+        while not (mask & (1 << i)):
+            i += 1
+        best_cost = INF
+        best_pairs = None
+        # Remove i do mask.
+        mask_without_i = mask & ~(1 << i)
+        # Tenta emparelhar i com cada outro vértice disponível.
+        j_bit = mask_without_i
+        while j_bit:
+            # Recupera o menor índice j disponível no mask.
+            j = (j_bit & -j_bit).bit_length() - 1
+            new_mask = mask_without_i & ~(1 << j)
+            sub_cost, sub_pairs = dp(new_mask)
+            total_cost = cost_matrix[i][j] + sub_cost
+            if total_cost < best_cost:
+                best_cost = total_cost
+                best_pairs = sub_pairs + [(i, j)]
+            # Remove o bit menos significativo e repete.
+            j_bit = j_bit & (j_bit - 1)
+        
+        memo[mask] = (best_cost, best_pairs)
+        return memo[mask]
+    
+    full_mask = (1 << n) - 1
+    _, matching = dp(full_mask)
+    
+    # 4. Converte os pares de índices para as arestas (nomes dos vértices).
+    added_edges = []
+    for i, j in matching:
+        added_edges.append((odd_vertices[i], odd_vertices[j]))
+    
+    return added_edges

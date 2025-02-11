@@ -37,6 +37,21 @@ V = grafos.numero_vertices(G_adj)
 # print(len(grafos.vertices_adjacentes(G_adj, "BOG")))
 #grafos.plotar_lista_adj(G_adj, 0.9, 60)
 
+excentricidades = grafos.calcular_excentricidades(G_adj)
+vertices_excentricidade = sorted(excentricidades.items(), key=lambda item: item[1])
+
+# Seleciona os 3 primeiros (ou menos, se o grafo tiver menos de 3 vértices)
+min3 = vertices_excentricidade[:3]
+
+print("Os 3 vértices com menor excentricidade são:")
+for vertice, excent in min3:
+    print(f"Vértice {vertice} com excentricidade {excent}")
+
+max3 = vertices_excentricidade[-3:]
+
+print("Os 3 vértices com maior excentricidade são:")
+for vertice, excent in max3:
+    print(f"Vértice {vertice} com excentricidade {excent}")
 #-----------------------------1. Ache sua árvore central
 #central_tree = grafos.obter_lista_adjacencia_arvore_central(G_adj)
 #grafos.plotar_lista_adj(central_tree, 0.9, 60)
@@ -67,7 +82,10 @@ V = grafos.numero_vertices(G_adj)
 
 
 #-----------------------------6. Usando todos os conceitos vistos até aqui, resolva o problema que você formulou, indicando suas características.
-print(grafos.num_componentes_apos_remocao(G_adj, "BOG"))
-print(grafos.num_componentes_apos_remocao(G_adj, "GYE"))
-print(grafos.num_componentes_apos_remocao(G_adj, "UIO"))
-print(grafos.num_componentes_apos_remocao(G_adj, "MDE"))
+
+new_edges = grafos.eulerize_graph(G_adj)
+print(new_edges)
+for edge in new_edges:
+    G.add_edge(edge[0], edge[1])
+
+grafos.plot_nx_grafo(G)
