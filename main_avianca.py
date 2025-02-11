@@ -34,7 +34,7 @@ G = busca_grafo("Grafo Avianca.csv")
 G_adj = grafos.grafo_para_lista_adjacencia(G)
 E = grafos.numero_arestas_lista_adjacencia(G_adj)
 V = grafos.numero_vertices(G_adj)
-
+# print(len(grafos.vertices_adjacentes(G_adj, "BOG")))
 #grafos.plotar_lista_adj(G_adj, 0.9, 60)
 
 #-----------------------------1. Ache sua árvore central
@@ -58,10 +58,16 @@ V = grafos.numero_vertices(G_adj)
 #    print("Não é hamiltoniano")
 
 #-----------------------------4. Determina algum corte fundamental para o grafo representativo do seu problema.
-
+# T = grafos.obter_lista_adjacencia_arvore_central(G_adj)
+# cortes = grafos.cortes_fundamentais(G_adj, T)
+# print(cortes)
+#grafos.plotar_cortes_fundamentais(G_adj, cortes[0], k=5, iter=50)
 
 #-----------------------------5. Considerando alguns cortes do grafo representativo do seu problema, faça uma análise de robustez e acessibilidade das entidades que você escolheu para serem nós no seu modelo de grafo.
 
 
 #-----------------------------6. Usando todos os conceitos vistos até aqui, resolva o problema que você formulou, indicando suas características.
-
+print(grafos.num_componentes_apos_remocao(G_adj, "BOG"))
+print(grafos.num_componentes_apos_remocao(G_adj, "GYE"))
+print(grafos.num_componentes_apos_remocao(G_adj, "UIO"))
+print(grafos.num_componentes_apos_remocao(G_adj, "MDE"))

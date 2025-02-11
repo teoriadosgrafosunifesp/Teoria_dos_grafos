@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import random
 from collections import defaultdict, deque
 import itertools
+import copy
 
 def gerar_matriz_adjacencia(grafo):
     # Extrai os vértices do grafo
@@ -141,6 +142,15 @@ def gerar_grafo_a_partir_lista(lista_adjacencia):
 # 1) O número de vértices de um grafo
 def numero_vertices(grafo):
     return len(grafo)
+
+# Função auxiliar para converter lista de adjacência em conjunto de arestas
+def obter_arestas(grafo):
+    arestas = set()
+    for vertice, vizinhos in grafo.items():
+        for vizinho in vizinhos:
+            # Adiciona a aresta de maneira ordenada para evitar duplicatas
+            arestas.add(tuple(sorted((vertice, vizinho))))
+    return arestas
 
 # 2) O número de arestas de um grafo
 def numero_arestas_lista_adjacencia(grafo):
@@ -324,80 +334,182 @@ def verificar_subgrafo(grafo, subgrafo):
                 return False
     return True
 
-def prim_mst(graph, vertices):
-    """Gera uma árvore de abrangência mínima (MST) usando o algoritmo de Prim sem considerar pesos."""
-    mst = []
-    visited = set([vertices[0]])
-    edges = [(u, v) for u, adj in graph.items() for v in adj if u in visited and v not in visited]
-    
-    while len(visited) < len(vertices):
-        edges.sort(key=lambda x: (x[0], x[1]))  # Ordena as arestas (sem peso)
-        for u, v in edges:
-            if v not in visited:
-                mst.append((u, v))
-                visited.add(v)
-                edges.extend([(v, w) for w in graph[v] if w not in visited])
-                break
-    
-    return mst
+def eh_arvore(lista_adjacencia):
+    """
+    Verifica se um grafo representado por lista de adjacência é uma árvore.
 
-def get_fundamental_cycle(tree, new_edge):
-    """Encontra o ciclo fundamental formado ao adicionar uma aresta a uma árvore."""
-    u, v = new_edge
-    parent = {u: None}
-    stack = [u]
+    Parâmetros:
+      - lista_adjacencia: Dicionário de adjacência representando o grafo.
+
+    Retorna:
+      - True se o grafo for uma árvore, False caso contrário.
+    """
+    # Contagem de vértices e arestas
+    count_vertices = len(lista_adjacencia)
+    count_arestas = sum(len(vizinhos) for vizinhos in lista_adjacencia.values()) // 2  # Arestas são bidirecionais
+
+    # Primeira condição: |E| == |V| - 1
+    if count_arestas != count_vertices - 1:
+        return False
+
+    # Conjunto para armazenar os vértices visitados
+    visitados = set()
+
+    # Função recursiva para DFS
+    def dfs(vertice, pai):
+        visitados.add(vertice)
+        for vizinho in lista_adjacencia[vertice]:
+            if vizinho not in visitados:
+                if not dfs(vizinho, vertice):  # Chamada recursiva
+                    return False
+            elif vizinho != pai:  # Encontramos um ciclo
+                return False
+        return True
+
+    # Pegamos um vértice arbitrário para iniciar a DFS
+    primeiro_vertice = next(iter(lista_adjacencia))
+
+    # Segunda condição: Deve ser conexo e não ter ciclos
+    if not dfs(primeiro_vertice, None):
+        return False
+
+    # Terceira condição: Todos os vértices devem ser alcançados (grafo conexo)
+    if len(visitados) != count_vertices:
+        return False
+
+    return True
+
+def spanning_tree(graph, vertices):
+    """
+    Gera uma árvore de abrangência (qualquer uma) a partir do grafo,
+    usando uma DFS a partir do primeiro vértice da lista.
+    A árvore é representada como um conjunto de arestas, onde cada aresta é um frozenset com 2 vértices.
+    """
+    T = set()
+    visited = set()
+    
+    def dfs(u):
+        visited.add(u)
+        for v in graph[u]:
+            if v not in visited:
+                # Adiciona a aresta de forma não direcionada (ordem irrelevante)
+                T.add(frozenset({u, v}))
+                dfs(v)
+                
+    dfs(vertices[0])
+    return T
+
+def get_path_edges(T, start, end):
+    """
+    Dado T (um conjunto de arestas que forma uma árvore) e dois vértices start e end,
+    encontra o caminho único entre eles. Retorna a lista de arestas (cada uma um frozenset)
+    que compõem esse caminho.
+    """
+    # Constrói a lista de adjacência para a árvore T.
+    adj = {}
+    for edge in T:
+        for node in edge:
+            if node not in adj:
+                adj[node] = set()
+        a, b = tuple(edge)
+        adj[a].add(b)
+        adj[b].add(a)
+    
+    # Busca em profundidade para encontrar o caminho de start até end.
+    visited = set([start])
+    parent = {start: None}
+    stack = [start]
+    found = False
     
     while stack:
-        node = stack.pop()
-        for adj in tree.get(node, {}):
-            if adj not in parent:
-                parent[adj] = node
-                stack.append(adj)
-                if adj == v:
-                    break
-    
-    if v not in parent:
-        return []  # Retorna um ciclo vazio se não encontrar um caminho válido
-    
-    cycle = []
-    while v is not None:
-        cycle.append((parent[v], v))
-        v = parent[v]
-    
-    return cycle[1:]
-
-def generate_spanning_trees(graph, vertices, k):
-    """Gera uma árvore de abrangência e encontra k outras árvores por trocas cíclicas."""
-    tree_edges = prim_mst(graph, vertices)
-    tree = {u: set() for u in vertices}
-    for u, v in tree_edges:
-        tree[u].add(v)
-        tree[v].add(u)
-    
-    trees = [tree.copy()]
-    all_edges = [(u, v) for u in graph for v in graph[u] if u < v]
-    
-    for _ in range(k):
-        non_tree_edges = [e for e in all_edges if e[:2] not in [(x, y) for x in tree for y in tree[x]]]
-        if not non_tree_edges:
+        current = stack.pop()
+        if current == end:
+            found = True
             break
-        
-        new_edge = random.choice(non_tree_edges)
-        cycle = get_fundamental_cycle(tree, new_edge)
-        
-        removable_edges = [e for e in cycle if e != new_edge]
-        if removable_edges:
-            remove_edge = random.choice(removable_edges)
-            if remove_edge[0] in tree and remove_edge[1] in tree[remove_edge[0]]:
-                tree[remove_edge[0]].remove(remove_edge[1])
-            if remove_edge[1] in tree and remove_edge[0] in tree[remove_edge[1]]:
-                tree[remove_edge[1]].remove(remove_edge[0])
-            
-            tree[new_edge[0]].add(new_edge[1])
-            tree[new_edge[1]].add(new_edge[0])
-            trees.append(tree.copy())
+        for neighbor in adj.get(current, []):
+            if neighbor not in visited:
+                visited.add(neighbor)
+                parent[neighbor] = current
+                stack.append(neighbor)
+                
+    if not found:
+        return None  # Em uma árvore, isso não deve ocorrer.
     
-    return trees
+    # Reconstrói o caminho (lista de arestas) a partir dos ponteiros parent.
+    path_edges = []
+    cur = end
+    while parent[cur] is not None:
+        p = parent[cur]
+        path_edges.append(frozenset({cur, p}))
+        cur = p
+    return path_edges
+
+def generate_all_spanning_trees(graph):
+    """
+    A partir de um grafo (lista de adjacência representada por um dicionário: vértice -> lista de vizinhos),
+    gera todas as árvores de abrangência do grafo usando a técnica de troca cíclica.
+    
+    Retorna uma lista de árvores, onde cada árvore é representada também por uma lista de adjacência
+    (neste caso, um dicionário: vértice -> lista ordenada de vizinhos).
+    """
+    # Constrói o conjunto total de arestas do grafo.
+    E = set()
+    for u in graph:
+        for v in graph[u]:
+            E.add(frozenset({u, v}))
+    
+    vertices = list(graph.keys())
+    # Obtém uma árvore de abrangência inicial (por exemplo, usando DFS).
+    T0 = spanning_tree(graph, vertices)
+    
+    # Usaremos um conjunto para armazenar as árvores já geradas, utilizando sua representação canônica.
+    all_trees = set()  # Cada árvore será representada como frozenset de arestas.
+    result_trees = []   # Aqui armazenamos cada árvore como um conjunto (T: set de frozensets).
+    
+    def dfs_spanning(T):
+        canon = frozenset(T)  # Representação imutável da árvore T.
+        if canon in all_trees:
+            return
+        all_trees.add(canon)
+        result_trees.append(T.copy())
+        
+        # Para cada aresta que está no grafo mas não em T, tenta-se realizar a troca cíclica.
+        non_tree_edges = E - T
+        for e in non_tree_edges:
+            # Desempacota os dois vértices da aresta e.
+            u, v = tuple(e)
+            # Encontra o caminho único entre u e v em T.
+            path_edges = get_path_edges(T, u, v)
+            if path_edges is None:
+                continue
+            # O ciclo fundamental é composto pelo caminho encontrado + a aresta e.
+            cycle_edges = set(path_edges)
+            cycle_edges.add(e)
+
+            # gera uma nova árvore T_new = T ∪ {e} - {f}.
+            for f in cycle_edges:
+                if f == e:
+                    continue
+                T_new = T.copy()
+                T_new.remove(f)
+                T_new.add(e)
+                dfs_spanning(T_new)
+    
+    dfs_spanning(T0)
+    
+    # Converte cada árvore (representada como conjunto de arestas) para lista de adjacência.
+    trees_adj_list = []
+    for T in result_trees:
+        adj = {v: set() for v in vertices}
+        for edge in T:
+            a, b = tuple(edge)
+            adj[a].add(b)
+            adj[b].add(a)
+        # Converte os conjuntos de vizinhos para listas ordenadas.
+        adj_list = {v: sorted(list(neigh)) for v, neigh in adj.items()}
+        trees_adj_list.append(adj_list)
+        
+    return trees_adj_list
 
 def gerar_arvore_abrangencia(grafo, inicio):
     """
@@ -418,6 +530,36 @@ def gerar_arvore_abrangencia(grafo, inicio):
     # Retorna como conjunto de arestas para facilitar comparações
     return set(arvore)
 
+def gerar_arvore_abrangencia_lista_adjacencia(grafo, inicio):
+    """
+    Gera uma árvore de abrangência a partir de um nó inicial usando DFS.
+    Retorna a árvore como uma lista de adjacência.
+    
+    Parâmetros:
+      - grafo: Dicionário de adjacência representando o grafo original.
+      - inicio: Vértice de onde a busca começará.
+      
+    Retorna:
+      - Uma lista de adjacência representando a árvore de abrangência.
+    """
+    arvore = {no: set() for no in grafo}  # Inicializa a lista de adjacência
+    visitado = set()
+
+    def dfs(no):
+        visitado.add(no)
+        for vizinho in grafo[no]:
+            if vizinho not in visitado:
+                arvore[no].add(vizinho)  # Adiciona a conexão na árvore
+                arvore[vizinho].add(no)  # Como é uma árvore, a relação é bidirecional
+                dfs(vizinho)
+
+    dfs(inicio)
+
+    # Removendo os nós sem conexões (para deixar apenas a estrutura da árvore)
+    arvore = {no: vizinhos for no, vizinhos in arvore.items() if vizinhos}
+
+    return arvore
+
 def calcular_distancia_arvores(A1, A2):
     # Inicializa o contador de distância
     distancia = 0
@@ -436,31 +578,67 @@ def calcular_distancia_arvores(A1, A2):
     
     return distancia
 
+def soma_simetrica(grafo1, grafo2):
+    # Obtém as arestas de cada grafo
+    arestas_g1 = obter_arestas(grafo1)
+    arestas_g2 = obter_arestas(grafo2)
+
+    # Calcula a soma simétrica entre os conjuntos de arestas
+    soma_simetrica = arestas_g1.symmetric_difference(arestas_g2)
+
+    return soma_simetrica
+
+def distancia_por_soma(T1, T2):
+    # Aqui esperamos que T1 e T2 sejam conjuntos de arestas (frozenset)
+    # Por exemplo, cada aresta é representada por frozenset({u, v})
+    # A soma simétrica entre dois conjuntos é: A ^ B
+    diff = T1 ^ T2
+    return len(diff)  # Se cada aresta é única, não precisa dividir por 2
+
+def convert_adjlist_to_edge_set(adj_list):
+    """
+    Converte uma árvore representada como lista de adjacência (dicionário)
+    para um conjunto de arestas, onde cada aresta é um frozenset({u, v}).
+    """
+    edge_set = set()
+    for u, vizinhos in adj_list.items():
+        for v in vizinhos:
+            # Usamos frozenset para garantir que a aresta {u, v} seja única
+            edge_set.add(frozenset({u, v}))
+    return edge_set
+
 def encontrar_arvore_central(grafo):
     """
     Encontra a árvore central do grafo.
+    O grafo é fornecido como lista de adjacência (dicionário: vértice -> lista de vizinhos).
+    Retorna (indice_central, arvore_central) onde:
+      - indice_central é o índice da árvore central na lista de árvores geradas;
+      - arvore_central é a árvore central no formato de lista de adjacência.
     """
-    arvores = {}
-    vertices = list(grafo.keys())
-
-    # Gera todas as árvores de abrangência a partir de cada vértice
-    for v in vertices:
-        arvores[v] = gerar_arvore_abrangencia(grafo, v)
-
-    # Calcula todas as distâncias entre as árvores
-    distancias = {v: {} for v in vertices}
-    for (v1, v2) in itertools.combinations(vertices, 2):
-        distancia = calcular_distancia_arvores(arvores[v1], arvores[v2])
-        distancias[v1][v2] = distancia
-        distancias[v2][v1] = distancia
-
-    # Para cada árvore, calcula a maior distância em relação às outras
-    max_distancias = {v: max(distancias[v].values()) for v in vertices}
-
-    # Encontra a árvore com a menor distância máxima
-    arvore_central = max(max_distancias, key=max_distancias.get)
+    # Gera todas as árvores de abrangência
+    arvores = generate_all_spanning_trees(grafo)
+    n = len(arvores)
     
-    return arvore_central, arvores[arvore_central]
+    # Converte cada árvore para conjunto de arestas
+    arvores_edge_set = [convert_adjlist_to_edge_set(T) for T in arvores]
+    
+    # Calcula as distâncias entre as árvores (indexadas de 0 a n-1)
+    distancias = {i: {} for i in range(n)}
+    for i, j in itertools.combinations(range(n), 2):
+        d = distancia_por_soma(arvores_edge_set[i], arvores_edge_set[j])
+        distancias[i][j] = d
+        distancias[j][i] = d
+    
+    # Para cada árvore, calcula a distância máxima em relação às demais (excentricidade)
+    max_distancias = {}
+    for i in range(n):
+        # Se n == 1, a árvore única terá excentricidade 0
+        max_distancias[i] = max(distancias[i].values()) if distancias[i] else 0
+    
+    # A árvore central é aquela que minimiza a distância máxima
+    indice_central = min(max_distancias, key=max_distancias.get)
+    
+    return indice_central, arvores[indice_central]
 
 def obter_lista_adjacencia_arvore_central(grafo):
     """
@@ -881,33 +1059,46 @@ def cortes_fundamentais(G, T):
                 cortes[tuple(sorted((u, v)))] = corte
     return cortes
 
-def plotar_cortes_fundamentais(G, cortes, k, iter):
+def plotar_cortes_fundamentais(G, cortes, k=0.1, iter=50):
     """
     Recebe:
       - G: Grafo original representado como um dicionário de adjacência.
-      - cortes: Dicionário retornado pela função cortes_fundamentais(G, T), 
-                onde as chaves são arestas da árvore e os valores são conjuntos 
+      - cortes: Dicionário retornado pela função cortes_fundamentais(G, T),
+                onde as chaves são arestas da árvore e os valores são conjuntos
                 de arestas de corte fundamental.
+      - k, iter: Parâmetros para melhorar a visualização do layout do grafo.
 
     Retorna:
-      - Um plot do grafo com as arestas de corte fundamental destacadas em vermelho.
+      - Um plot do grafo com as arestas normais em cinza e as de corte em vermelho.
     """
-    # Criar o grafo do networkx
+    # Criar o grafo do NetworkX
     G_nx = adj_list_to_nx(G)
 
-    # Criar layout
+    # Criar layout para visualização
     plt.figure(figsize=(12, 9))
     pos = nx.spring_layout(G_nx, k=k, iterations=iter)
 
-    # Desenhar todas as arestas normais em cinza
-    nx.draw(G_nx, pos, with_labels=True, node_color="lightblue", edge_color="gray", node_size=1000, font_size=10, font_weight="bold")
+    # Obter todas as arestas do grafo
+    todas_arestas = set(G_nx.edges())
 
-    # Desenhar as arestas de corte em vermelho
-    for corte in cortes.values():
-        nx.draw_networkx_edges(G_nx, pos, edgelist=list(corte), edge_color="red", width=2.5)
+    # Obter apenas as arestas de corte do dicionário 'cortes'
+    arestas_de_corte = set()
+    for conjunto in cortes.values():
+        arestas_de_corte.update(conjunto)  # Adiciona as arestas de corte
+
+    # As arestas normais são aquelas que NÃO estão em cortes
+    arestas_normais = todas_arestas - arestas_de_corte
+
+    # Desenhar todas as arestas normais primeiro (em cinza)
+    nx.draw(G_nx, pos, with_labels=True, node_color="gray", node_size=1000, font_size=10, font_weight="bold")
+    nx.draw_networkx_edges(G_nx, pos, edgelist=list(arestas_normais), edge_color="blue", width=1.5)
+
+    # Desenhar apenas as arestas de corte em vermelho
+    nx.draw_networkx_edges(G_nx, pos, edgelist=list(arestas_de_corte), edge_color="red", width=2.5)
 
     plt.title("Grafo com Arestas de Corte em Vermelho")
     plt.show()
+
 
 
 def analyze_robustness(G, nodes_to_remove):
@@ -939,3 +1130,48 @@ def analise_robustez(G):
     print(f"Número de componentes conexos no grafo: {num_components}")
     for i, component in enumerate(connected_components):
         print(f"Componente {i+1}: {component}")
+
+def num_componentes_apos_remocao(grafo, vertice_removido):
+    """
+    Recebe um grafo (lista de adjacência) e o nome de um vértice.
+    Retorna o número de componentes conexos do grafo resultante
+    após a remoção do vértice (e de todas as arestas incidentes a ele).
+
+    Parâmetros:
+      - grafo: dict, onde cada chave é um vértice e o valor é uma lista de vizinhos.
+      - vertice_removido: vértice a ser removido.
+
+    Retorna:
+      - número de componentes conexos (int).
+    """
+    # Cria uma cópia do grafo sem o vértice removido
+    subgrafo = {}
+    for v, vizinhos in grafo.items():
+        if v == vertice_removido:
+            continue
+        # Filtra os vizinhos para remover o vértice que será excluído
+        subgrafo[v] = [w for w in vizinhos if w != vertice_removido]
+
+    # Função auxiliar para realizar a busca em profundidade (DFS)
+    def dfs(inicio, visitados):
+        stack = [inicio]
+        while stack:
+            atual = stack.pop()
+            if atual in visitados:
+                continue
+            visitados.add(atual)
+            for vizinho in subgrafo.get(atual, []):
+                if vizinho not in visitados:
+                    stack.append(vizinho)
+
+    visitados = set()
+    componentes = 0
+
+    # Para cada vértice do subgrafo que ainda não foi visitado,
+    # inicia uma DFS e conta um novo componente.
+    for v in subgrafo:
+        if v not in visitados:
+            dfs(v, visitados)
+            componentes += 1
+
+    return componentes
